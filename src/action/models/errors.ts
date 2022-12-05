@@ -11,3 +11,10 @@ export class ActionAlreadyClosedError extends Error {
     Object.setPrototypeOf(this, ActionAlreadyClosedError.prototype);
   }
 }
+
+export class ServiceNotFoundOnRegistry extends Error {
+  public constructor(message: string) {
+    super(message);
+    Object.setPrototypeOf(this, ServiceNotFoundOnRegistry.prototype);
+  }
+}

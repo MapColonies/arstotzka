@@ -23,7 +23,7 @@ export const createDataSourceOptions = (dbConfig: DbConfig): DataSourceOptions =
     connectionOptions.password = undefined;
     connectionOptions.ssl = { key: readFileSync(sslPaths.key), cert: readFileSync(sslPaths.cert), ca: readFileSync(sslPaths.ca) };
   }
-  return { entities: [...DB_ENTITIES, '**/DAL/*.js'], ...connectionOptions, logging: ['query'] };
+  return { entities: [...DB_ENTITIES, '**/DAL/*.js'], ...connectionOptions };
 };
 
 export const initDataSource = async (dbConfig: DbConfig): Promise<DataSource> => {

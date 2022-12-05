@@ -6,7 +6,7 @@ import { SERVICES } from '../../common/constants';
 import { HttpError } from '../../common/errors';
 import { Action, ActionFilter, ActionParams, UpdatableActionParams } from '../models/action';
 import { ActionManager } from '../models/actionManager';
-import { ActionAlreadyClosedError, ActionNotFoundError } from '../models/errors';
+import { ActionAlreadyClosedError, ActionNotFoundError, ServiceNotFoundOnRegistry } from '../models/errors';
 
 interface ActionId {
   actionId: string;
@@ -15,6 +15,12 @@ interface ActionId {
 type GetActionsHandler = RequestHandler<undefined, Action[], undefined, ActionFilter>;
 type PostActionHandler = RequestHandler<undefined, ActionId, ActionParams>;
 type PatchActionHandler = RequestHandler<ActionId, undefined, UpdatableActionParams>;
+
+const validateServiceOnRegistryMock = (serviceId: string): void => {
+  if (serviceId === 'badService') {
+    throw new ServiceNotFoundOnRegistry(`could not find service ${serviceId} on registry`);
+  }
+}
 
 @injectable()
 export class ActionController {
@@ -32,12 +38,12 @@ export class ActionController {
   public postAction: PostActionHandler = async (req, res, next) => {
     try {
       const serviceId = req.body.service;
-      // TODO validate serviceId
+      validateServiceOnRegistryMock(serviceId);
 
       const actionId = await this.manager.createAction(req.body);
       return res.status(httpStatus.CREATED).json({ actionId });
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof ServiceNotFoundOnRegistry) {
         (error as HttpError).status = StatusCodes.CONFLICT;
       }
       return next(error);
