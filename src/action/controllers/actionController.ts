@@ -4,26 +4,25 @@ import httpStatus, { StatusCodes } from 'http-status-codes';
 import { injectable, inject } from 'tsyringe';
 import { SERVICES } from '../../common/constants';
 import { HttpError } from '../../common/errors';
-import { Action, ActionParams, UpdateableActionParams } from '../models/action';
+import { Action, ActionFilter, ActionParams, UpdatableActionParams } from '../models/action';
 import { ActionManager } from '../models/actionManager';
 import { ActionAlreadyClosedError, ActionNotFoundError } from '../models/errors';
 
 interface ActionId {
-  actionId: string
-};
+  actionId: string;
+}
 
-type GetActionsHandler = RequestHandler<undefined, Action[]>;
+type GetActionsHandler = RequestHandler<undefined, Action[], undefined, ActionFilter>;
 type PostActionHandler = RequestHandler<undefined, ActionId, ActionParams>;
-type PatchActionHandler = RequestHandler<ActionId, undefined, UpdateableActionParams>;
+type PatchActionHandler = RequestHandler<ActionId, undefined, UpdatableActionParams>;
 
 @injectable()
 export class ActionController {
-  public constructor(@inject(SERVICES.LOGGER) private readonly logger: Logger, @inject(ActionManager) private readonly manager: ActionManager) { }
+  public constructor(@inject(SERVICES.LOGGER) private readonly logger: Logger, @inject(ActionManager) private readonly manager: ActionManager) {}
 
   public getActions: GetActionsHandler = async (req, res, next) => {
     try {
-      // const filter: PublicReplicaFilter = convertObjectToCamelCase(req.query);
-      const actions = await this.manager.getActions();
+      const actions = await this.manager.getActions(req.query);
       return res.status(httpStatus.OK).json(actions);
     } catch (error) {
       return next(error);
@@ -32,8 +31,11 @@ export class ActionController {
 
   public postAction: PostActionHandler = async (req, res, next) => {
     try {
-      const createdAction = await this.manager.createAction(req.body);
-      return res.status(httpStatus.CREATED).json({ actionId: createdAction.actionId });
+      const serviceId = req.body.service;
+      // TODO validate serviceId
+
+      const actionId = await this.manager.createAction(req.body);
+      return res.status(httpStatus.CREATED).json({ actionId });
     } catch (error) {
       if (error instanceof Error) {
         (error as HttpError).status = StatusCodes.CONFLICT;

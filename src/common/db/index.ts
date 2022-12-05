@@ -11,6 +11,8 @@ let connectionSingleton: DataSource | undefined;
 
 const DB_TIMEOUT = 5000;
 
+export const DEFAULT_ORDER = 'desc';
+
 export const DATA_SOURCE_PROVIDER = Symbol('dataSourceProvider');
 
 export const DB_ENTITIES = [Action];
@@ -21,7 +23,7 @@ export const createDataSourceOptions = (dbConfig: DbConfig): DataSourceOptions =
     connectionOptions.password = undefined;
     connectionOptions.ssl = { key: readFileSync(sslPaths.key), cert: readFileSync(sslPaths.cert), ca: readFileSync(sslPaths.ca) };
   }
-  return { entities: [...DB_ENTITIES, '**/DAL/*.js'], ...connectionOptions };
+  return { entities: [...DB_ENTITIES, '**/DAL/*.js'], ...connectionOptions, logging: ['query'] };
 };
 
 export const initDataSource = async (dbConfig: DbConfig): Promise<DataSource> => {

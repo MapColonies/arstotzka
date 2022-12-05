@@ -54,8 +54,6 @@ paths:
                   $ref: '#/components/schemas/action'
         '400':
           $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
         5XX:
           $ref: '#/components/responses/UnexpectedError'
     post:
@@ -78,6 +76,7 @@ paths:
               required:
                 - service
                 - state
+              additionalProperties: false
       responses:
         '201':
           $ref: '#/components/responses/CreatedActionResponse'
@@ -110,9 +109,10 @@ paths:
                   $ref: '#/components/schemas/actionStatus'
                 metadata:
                   $ref: '#/components/schemas/actionMetadata'
+              additionalProperties: false
       responses:
         '200':
-          description: Updated
+          description: action updated
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':

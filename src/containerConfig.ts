@@ -5,7 +5,7 @@ import { DataSource } from 'typeorm';
 import { trace } from '@opentelemetry/api';
 import { instancePerContainerCachingFactory, DependencyContainer } from 'tsyringe';
 import { HealthCheck } from '@godaddy/terminus';
-import { CleanupRegistry } from '@map-colonies/cleanup-registry'
+import { CleanupRegistry } from '@map-colonies/cleanup-registry';
 import { dataSourceFactory, DATA_SOURCE_PROVIDER, getDbHealthCheckFunction } from './common/db';
 import { tracing } from './common/tracing';
 import { HEALTHCHECK, ON_SIGNAL, SERVICES, SERVICE_NAME } from './common/constants';
@@ -25,7 +25,8 @@ export const registerExternalValues = async (options?: RegisterOptions): Promise
     const loggerConfig = config.get<LoggerOptions>('telemetry.logger');
     const logger = jsLogger({ ...loggerConfig, mixin: getOtelMixin() });
 
-    cleanupRegistry.on('itemFailed', (id, error, msg) => logger.error({ msg, itemId: id, err: error }))
+    cleanupRegistry.on('itemFailed', (id, error, msg) => logger.error({ msg, itemId: id, err: error }));
+    cleanupRegistry.on('finished', (status) => logger.info({ msg: `cleanup registry finished cleanup`, status }));
 
     cleanupRegistry.register({ func: tracing.stop.bind(tracing), id: SERVICES.TRACER });
     const tracer = trace.getTracer(SERVICE_NAME);
@@ -57,19 +58,15 @@ export const registerExternalValues = async (options?: RegisterOptions): Promise
       {
         token: ON_SIGNAL,
         provider: {
-          useValue: {
-            useValue: async (): Promise<void> => {
-              await cleanupRegistry.trigger();
-            },
-          },
+          useValue: cleanupRegistry.trigger.bind(cleanupRegistry),
         },
       },
     ];
 
     const container = await registerDependencies(dependencies, options?.override, options?.useChild);
     return container;
-  } catch (e) {
+  } catch (error) {
     await cleanupRegistry.trigger();
-    throw e;
+    throw error;
   }
 };

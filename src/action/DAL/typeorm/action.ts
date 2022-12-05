@@ -1,9 +1,11 @@
-import { Column, Entity, PrimaryColumn, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
+import { Column, Entity, CreateDateColumn, UpdateDateColumn, Index, PrimaryGeneratedColumn } from 'typeorm';
 import { Action as IAction, ActionStatus } from '../../models/action';
+
+export const ACTION_IDENTIFIER_COLUMN = 'actionId';
 
 @Entity()
 export class Action implements IAction {
-  @PrimaryColumn({ name: 'action_id', type: 'uuid' })
+  @PrimaryGeneratedColumn('uuid', { name: 'action_id' })
   public actionId!: string;
 
   @Index()
@@ -13,7 +15,7 @@ export class Action implements IAction {
   @Column({ name: 'state', type: 'integer' })
   public state!: number;
 
-  @Column({ name: 'action_status', type: 'enum', enum: ActionStatus })
+  @Column({ name: 'action_status', type: 'enum', enum: ActionStatus, default: ActionStatus.ACTIVE })
   public status!: ActionStatus;
 
   @Column({ name: 'metadata', type: 'jsonb', nullable: true })
