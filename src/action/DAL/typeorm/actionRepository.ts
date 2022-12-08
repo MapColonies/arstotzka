@@ -1,7 +1,8 @@
 import { DataSource, FindOptionsWhere, In, InsertResult } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { FactoryFunction } from 'tsyringe';
-import { DATA_SOURCE_PROVIDER, DEFAULT_ORDER } from '../../../common/db';
-import { Action, ActionFilter, ActionParams, UpdatableActionParams } from '../../models/action';
+import { DATA_SOURCE_PROVIDER } from '../../../common/db';
+import { Action, ActionFilter, ActionParams, ActionStatus, UpdatableActionParams } from '../../models/action';
 import { Action as ActionEntity, ACTION_IDENTIFIER_COLUMN } from './action';
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -17,7 +18,7 @@ const createActionRepository = (dataSource: DataSource) => {
         options.status = In(filter.status);
       }
 
-      return this.find({ where: options, order: { createdAt: filter.sort ?? DEFAULT_ORDER }, take: filter.limit });
+      return this.find({ where: options, order: { createdAt: filter.sort }, take: filter.limit });
     },
     async findOneActionById(actionId: string): Promise<Action | null> {
       return this.findOneBy({ actionId });
@@ -26,20 +27,23 @@ const createActionRepository = (dataSource: DataSource) => {
       return this.createQueryBuilder().insert().into(ActionEntity).values(params).returning([ACTION_IDENTIFIER_COLUMN]).execute();
     },
     async updateOneAction(actionId: string, updateParams: UpdatableActionParams): Promise<void> {
-      await this.createQueryBuilder('action')
-        .update({
+      let finalParams: QueryDeepPartialEntity<Action> = updateParams;
+
+      if (updateParams.status !== undefined && ACTION_CLOSED_STATUSES.includes(updateParams.status)) {
+        finalParams = {
           ...updateParams,
-          closedAt: () => `CASE
-       WHEN $1::action.action_action_status_enum IN ('completed', 'failed', 'canceled') THEN CURRENT_TIMESTAMP
-       END`,
-        })
-        .where({ actionId })
-        .execute();
+          closedAt: () => 'CURRENT_TIMESTAMP',
+        };
+      }
+
+      await this.createQueryBuilder('action').update(finalParams).where({ actionId }).execute();
     },
   });
 };
 
-export const ACTION_REPOSITORY_SYMBOL = Symbol('actionReository');
+export const ACTION_CLOSED_STATUSES = [ActionStatus.COMPLETED, ActionStatus.FAILED, ActionStatus.CANCELED];
+
+export const ACTION_REPOSITORY_SYMBOL = Symbol('actionRepository');
 
 export type ActionRepository = ReturnType<typeof createActionRepository>;
 

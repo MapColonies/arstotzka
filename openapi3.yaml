@@ -21,14 +21,12 @@ paths:
           name: service
           description: >-
             returned actions matching the following service
-          required: false
           schema:
             $ref: '#/components/schemas/service'
         - in: query
           name: status
           description: >-
             returned actions matching the following statuses
-          required: false
           schema:
             type: array
             items:
@@ -104,6 +102,7 @@ paths:
           application/json:
             schema:
               type: object
+              minProperties: 1
               properties:
                 status:
                   $ref: '#/components/schemas/actionStatus'
@@ -115,8 +114,6 @@ paths:
           description: action updated
         '400':
           $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
@@ -202,9 +199,8 @@ components:
         - desc
       default: desc
     limit:
-      type: number
-      minimum: 0
-      exclusiveMinimum: true
+      type: integer
+      minimum: 1
     action:
       type: object
       properties:

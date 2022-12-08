@@ -6,7 +6,7 @@ import { SERVICES } from '../../common/constants';
 import { HttpError } from '../../common/errors';
 import { Action, ActionFilter, ActionParams, UpdatableActionParams } from '../models/action';
 import { ActionManager } from '../models/actionManager';
-import { ActionAlreadyClosedError, ActionNotFoundError, ServiceNotFoundOnRegistry } from '../models/errors';
+import { ActionAlreadyClosedError, ActionNotFoundError, ServiceNotRecognizedByRegistry } from '../models/errors';
 
 interface ActionId {
   actionId: string;
@@ -18,9 +18,9 @@ type PatchActionHandler = RequestHandler<ActionId, undefined, UpdatableActionPar
 
 const validateServiceOnRegistryMock = (serviceId: string): void => {
   if (serviceId === 'badService') {
-    throw new ServiceNotFoundOnRegistry(`could not find service ${serviceId} on registry`);
+    throw new ServiceNotRecognizedByRegistry(`could not recognize service ${serviceId} on registry`);
   }
-}
+};
 
 @injectable()
 export class ActionController {
@@ -43,7 +43,7 @@ export class ActionController {
       const actionId = await this.manager.createAction(req.body);
       return res.status(httpStatus.CREATED).json({ actionId });
     } catch (error) {
-      if (error instanceof ServiceNotFoundOnRegistry) {
+      if (error instanceof ServiceNotRecognizedByRegistry) {
         (error as HttpError).status = StatusCodes.CONFLICT;
       }
       return next(error);

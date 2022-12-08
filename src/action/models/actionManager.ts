@@ -2,11 +2,9 @@ import { Logger } from '@map-colonies/js-logger';
 import { inject, injectable } from 'tsyringe';
 import { SERVICES } from '../../common/constants';
 import { ACTION_IDENTIFIER_COLUMN } from '../DAL/typeorm/action';
-import { ActionRepository, ACTION_REPOSITORY_SYMBOL } from '../DAL/typeorm/actionRepository';
-import { Action, ActionFilter, ActionParams, ActionStatus, UpdatableActionParams } from './action';
+import { ActionRepository, ACTION_CLOSED_STATUSES, ACTION_REPOSITORY_SYMBOL } from '../DAL/typeorm/actionRepository';
+import { Action, ActionFilter, ActionParams, UpdatableActionParams } from './action';
 import { ActionAlreadyClosedError, ActionNotFoundError } from './errors';
-
-const ACTION_CLOSED_STATUSES = [ActionStatus.COMPLETED, ActionStatus.FAILED, ActionStatus.CANCELED];
 
 @injectable()
 export class ActionManager {
@@ -25,7 +23,6 @@ export class ActionManager {
     this.logger.info({ msg: 'creating action with the following params', params });
 
     const creationRes = await this.actionRepository.createAction(params);
-
     const actionId = creationRes.identifiers[0][ACTION_IDENTIFIER_COLUMN] as string;
 
     this.logger.info({ msg: 'created action', actionId });
@@ -42,7 +39,7 @@ export class ActionManager {
     }
 
     if (ACTION_CLOSED_STATUSES.includes(action.status)) {
-      this.logger.error({ msg: 'action already closed', actionId, actionStatus: action.status });
+      this.logger.error({ msg: 'action has already been closed', actionId, actionStatus: action.status });
       throw new ActionAlreadyClosedError(`action ${actionId} has already been closed with status ${action.status}`);
     }
 

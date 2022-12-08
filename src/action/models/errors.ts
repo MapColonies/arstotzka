@@ -12,9 +12,9 @@ export class ActionAlreadyClosedError extends Error {
   }
 }
 
-export class ServiceNotFoundOnRegistry extends Error {
+export class ServiceNotRecognizedByRegistry extends Error {
   public constructor(message: string) {
     super(message);
-    Object.setPrototypeOf(this, ServiceNotFoundOnRegistry.prototype);
+    Object.setPrototypeOf(this, ServiceNotRecognizedByRegistry.prototype);
   }
 }

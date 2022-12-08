@@ -11,8 +11,6 @@ let connectionSingleton: DataSource | undefined;
 
 const DB_TIMEOUT = 5000;
 
-export const DEFAULT_ORDER = 'desc';
-
 export const DATA_SOURCE_PROVIDER = Symbol('dataSourceProvider');
 
 export const DB_ENTITIES = [Action];
