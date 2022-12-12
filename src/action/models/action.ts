@@ -11,6 +11,7 @@ export interface ActionParams extends Omit<UpdatableActionParams, 'status'> {
 
 export interface Action extends ActionParams {
   actionId: string;
+  rotation: string;
   status: ActionStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -28,6 +29,7 @@ export type Sort = 'asc' | 'desc';
 
 export interface ActionFilter {
   service?: string;
+  rotation?: number;
   status?: ActionStatus[];
   limit?: number;
   sort?: Sort;

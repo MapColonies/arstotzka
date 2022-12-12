@@ -32,6 +32,12 @@ paths:
             items:
               $ref: '#/components/schemas/actionStatus'
         - in: query
+          name: rotation
+          description: >-
+            returned actions matching the following service rotation
+          schema:
+            $ref: '#/components/schemas/rotation'
+        - in: query
           name: sort
           description: returned actions order sorted by creation date
           schema:
@@ -176,6 +182,9 @@ components:
       format: uuid
     service:
       type: string
+    rotation:
+      type: string
+      example: '1.3'
     actionState:
       type: integer
       minimum: 0
@@ -208,6 +217,8 @@ components:
           $ref: '#/components/schemas/actionId'
         service:
           $ref: '#/components/schemas/service'
+        rotation:
+          $ref: '#/components/schemas/rotation'
         state:
           $ref: '#/components/schemas/actionState'
         status:
@@ -223,6 +234,7 @@ components:
       required:
         - id
         - service
+        - rotation
         - state
         - status
         - createdAt

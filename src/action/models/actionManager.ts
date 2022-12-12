@@ -22,7 +22,7 @@ export class ActionManager {
   public async createAction(params: ActionParams): Promise<string> {
     this.logger.info({ msg: 'creating action with the following params', params });
 
-    const creationRes = await this.actionRepository.createAction(params);
+    const creationRes = await this.actionRepository.createAction({ ...params, rotation: '1.0' });
     const actionId = creationRes.identifiers[0][ACTION_IDENTIFIER_COLUMN] as string;
 
     this.logger.info({ msg: 'created action', actionId });

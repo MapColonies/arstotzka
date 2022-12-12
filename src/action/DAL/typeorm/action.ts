@@ -15,6 +15,9 @@ export class Action implements IAction {
   @Column({ name: 'state', type: 'integer' })
   public state!: number;
 
+  @Column({ name: 'rotation' })
+  public rotation!: string;
+
   @Column({ name: 'action_status', type: 'enum', enum: ActionStatus, default: ActionStatus.ACTIVE })
   public status!: ActionStatus;
 

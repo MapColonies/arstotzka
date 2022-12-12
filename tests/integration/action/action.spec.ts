@@ -10,7 +10,7 @@ import { SERVICES } from '../../../src/common/constants';
 import { BEFORE_ALL_TIMEOUT, LONG_RUNNING_TEST_TIMEOUT } from '../helpers';
 import { Action, ActionFilter, ActionParams, ActionStatus, Sort, UpdatableActionParams } from '../../../src/action/models/action';
 import { ActionRequestSender } from './helpers/requestSender';
-import { generateActionParams, sortByDate, stringifyAction, stringifyActions } from './helpers';
+import { generateAction, generateActionParams, sortByDate, stringifyAction, stringifyActions } from './helpers';
 
 let depContainer: DependencyContainer;
 const queryFailureMock = jest.fn().mockRejectedValue(new QueryFailedError('select *', [], new Error('failed')));
@@ -31,10 +31,11 @@ describe('action', function () {
     depContainer = container;
     const repository = depContainer.resolve<ActionRepository>(ACTION_REPOSITORY_SYMBOL);
     actionRepository = repository;
+    await actionRepository.clear();
     requestSender = new ActionRequestSender(app);
   }, BEFORE_ALL_TIMEOUT);
 
-  beforeEach(async function () {
+  afterEach(async function () {
     await actionRepository.clear();
   });
 
@@ -48,8 +49,8 @@ describe('action', function () {
       });
 
       it('should return 200 for an empty filter and return the existing actions', async function () {
-        const params = generateActionParams();
-        const action = await actionRepository.save(params);
+        const generatedAction = generateAction();
+        const action = await actionRepository.save(generatedAction);
 
         const response = await requestSender.getActions();
 
@@ -58,12 +59,12 @@ describe('action', function () {
       });
 
       it('should return 200 and only the actions matching service filter', async function () {
-        const params1 = generateActionParams();
-        const params2 = generateActionParams();
-        const actions = await actionRepository.save([params1, params2]);
-        const expected = actions.filter((a) => a.service === params1.service);
+        const action1 = generateAction();
+        const action2 = generateAction();
+        const actions = await actionRepository.save([action1, action2]);
+        const expected = actions.filter((a) => a.service === action1.service);
 
-        const response = await requestSender.getActions({ service: params1.service });
+        const response = await requestSender.getActions({ service: action1.service });
 
         expect(response.status).toBe(httpStatusCodes.OK);
         expect(response.body).toMatchObject(stringifyActions(expected));
@@ -71,10 +72,10 @@ describe('action', function () {
 
       it('should return 200 and only the actions matching status filter', async function () {
         const filteredStatus = ActionStatus.FAILED;
-        const params1 = generateActionParams({ status: filteredStatus });
-        const params2 = generateActionParams();
+        const action1 = generateAction({ status: filteredStatus });
+        const action2 = generateAction();
 
-        const actions = await actionRepository.save([params1, params2]);
+        const actions = await actionRepository.save([action1, action2]);
         const expected = actions.filter((a) => a.status === filteredStatus);
 
         const response = await requestSender.getActions({ status: [filteredStatus] });
@@ -84,12 +85,12 @@ describe('action', function () {
       });
 
       it('should return 200 and only the actions matching multiple statuses filter', async function () {
-        const params1 = generateActionParams({ status: ActionStatus.COMPLETED });
-        const params2 = generateActionParams({ status: ActionStatus.FAILED });
-        const params3 = generateActionParams();
+        const action1 = generateAction({ status: ActionStatus.COMPLETED });
+        const action2 = generateAction({ status: ActionStatus.FAILED });
+        const action3 = generateAction();
         const filteredStatuses = [ActionStatus.COMPLETED, ActionStatus.FAILED];
 
-        const actions = await actionRepository.save([params1, params2, params3]);
+        const actions = await actionRepository.save([action1, action2, action3]);
         const expected = actions.filter((a) => filteredStatuses.includes(a.status));
 
         const response = await requestSender.getActions({ status: filteredStatuses });
@@ -102,11 +103,11 @@ describe('action', function () {
         const filteredStatus = ActionStatus.COMPLETED;
         const filter: ActionFilter = { service: 'someService', status: [filteredStatus] };
 
-        const params1 = generateActionParams({ service: filter.service, status: filteredStatus });
-        const params2 = generateActionParams({ service: filter.service, status: ActionStatus.FAILED });
-        const params3 = generateActionParams({ status: filteredStatus });
+        const action1 = generateAction({ service: filter.service, status: filteredStatus });
+        const action2 = generateAction({ service: filter.service, status: ActionStatus.FAILED });
+        const action3 = generateAction({ status: filteredStatus });
 
-        const actions = await actionRepository.save([params1, params2, params3]);
+        const actions = await actionRepository.save([action1, action2, action3]);
         const expected = actions.filter((a) => a.service === filter.service && a.status === filteredStatus);
 
         const response = await requestSender.getActions(filter);
@@ -116,10 +117,10 @@ describe('action', function () {
       });
 
       it('should return 200 and only limited amount of actions according to filter', async function () {
-        const params1 = generateActionParams();
-        const params2 = generateActionParams();
-        const params3 = generateActionParams();
-        await actionRepository.save([params1, params2, params3]);
+        const action1 = generateAction();
+        const action2 = generateAction();
+        const action3 = generateAction();
+        await actionRepository.save([action1, action2, action3]);
 
         const response = await requestSender.getActions({ limit: 2 });
 
@@ -128,12 +129,12 @@ describe('action', function () {
       });
 
       it('should return 200 and ordered actions by creation time according to default', async function () {
-        const params1 = generateActionParams();
-        const params2 = generateActionParams();
-        const params3 = generateActionParams();
-        const res1 = await actionRepository.save(params1);
-        const res2 = await actionRepository.save(params2);
-        const res3 = await actionRepository.save(params3);
+        const action1 = generateAction();
+        const action2 = generateAction();
+        const action3 = generateAction();
+        const res1 = await actionRepository.save(action1);
+        const res2 = await actionRepository.save(action2);
+        const res3 = await actionRepository.save(action3);
         const expected = sortByDate([res1, res2, res3], 'updatedAt', 'desc');
 
         const response = await requestSender.getActions();
@@ -143,12 +144,12 @@ describe('action', function () {
       });
 
       it('should return 200 and ordered actions by creation time asc or desc accordingly', async function () {
-        const params1 = generateActionParams();
-        const params2 = generateActionParams();
-        const params3 = generateActionParams();
-        const res1 = await actionRepository.save(params1);
-        const res2 = await actionRepository.save(params2);
-        const res3 = await actionRepository.save(params3);
+        const action1 = generateAction();
+        const action2 = generateAction();
+        const action3 = generateAction();
+        const res1 = await actionRepository.save(action1);
+        const res2 = await actionRepository.save(action2);
+        const res3 = await actionRepository.save(action3);
 
         const expectedAsc = sortByDate([res1, res2, res3], 'updatedAt', 'asc');
         const responseAsc = await requestSender.getActions({ sort: 'asc' });
@@ -162,12 +163,12 @@ describe('action', function () {
       });
 
       it('should return 200 and ordered actions by creation time desc which is the default sort', async function () {
-        const params1 = generateActionParams();
-        const params2 = generateActionParams();
-        const params3 = generateActionParams();
-        const res1 = await actionRepository.save(params1);
-        const res2 = await actionRepository.save(params2);
-        const res3 = await actionRepository.save(params3);
+        const action1 = generateAction();
+        const action2 = generateAction();
+        const action3 = generateAction();
+        const res1 = await actionRepository.save(action1);
+        const res2 = await actionRepository.save(action2);
+        const res3 = await actionRepository.save(action3);
         const expected = sortByDate([res1, res2, res3], 'updatedAt', 'desc');
 
         const response = await requestSender.getActions();
@@ -179,16 +180,16 @@ describe('action', function () {
       it('should return 200 and filtered actions by multi param filter', async function () {
         const filteredStatus = ActionStatus.COMPLETED;
         const filter: ActionFilter = { service: 'someService', status: [filteredStatus], sort: 'asc', limit: 2 };
-        const params1 = generateActionParams({ service: filter.service, status: filteredStatus });
-        const params2 = generateActionParams({ service: filter.service, status: ActionStatus.FAILED });
-        const params3 = generateActionParams({ status: filteredStatus });
-        const params4 = generateActionParams({ service: filter.service, status: filteredStatus });
-        const params5 = generateActionParams({ service: filter.service, status: filteredStatus });
+        const action1 = generateAction({ service: filter.service, status: filteredStatus });
+        const action2 = generateAction({ service: filter.service, status: ActionStatus.FAILED });
+        const action3 = generateAction({ status: filteredStatus });
+        const action4 = generateAction({ service: filter.service, status: filteredStatus });
+        const action5 = generateAction({ service: filter.service, status: filteredStatus });
 
-        const res1 = await actionRepository.save(params1);
-        await actionRepository.save([params2, params3]);
-        const res4 = await actionRepository.save(params4);
-        const res5 = await actionRepository.save(params5);
+        const res1 = await actionRepository.save(action1);
+        await actionRepository.save([action2, action3]);
+        const res4 = await actionRepository.save(action4);
+        const res5 = await actionRepository.save(action5);
         const expected = sortByDate([res1, res4, res5], 'updatedAt', 'asc');
 
         const response = await requestSender.getActions(filter);

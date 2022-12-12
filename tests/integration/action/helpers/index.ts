@@ -5,7 +5,7 @@ type HasProperty<K extends string, V> = {
   [P in K]: V;
 };
 
-type GeneratedActionParams = ActionParams & { status?: ActionStatus };
+type GeneratedActionParams = ActionParams & { rotation?: string; status?: ActionStatus };
 
 export type StringifiedAction = Omit<Action, 'createdAt' | 'updatedAt' | 'closedAt'> & {
   createdAt: string;
@@ -13,12 +13,19 @@ export type StringifiedAction = Omit<Action, 'createdAt' | 'updatedAt' | 'closed
   closedAt: string | null;
 };
 
+export const generateAction = (params: Partial<GeneratedActionParams> = {}): GeneratedActionParams => {
+  return {
+    ...generateActionParams(params),
+    rotation: params.rotation ?? faker.datatype.float().toString(),
+    status: params.status ?? undefined,
+  };
+};
+
 export const generateActionParams = (params: Partial<GeneratedActionParams> = {}): GeneratedActionParams => {
   return {
     service: params.service ?? faker.datatype.string(),
     state: params.state ?? faker.datatype.number(),
     metadata: params.metadata ?? (JSON.parse(faker.datatype.json()) as Record<string, unknown>),
-    status: params.status ?? undefined,
   };
 };
 

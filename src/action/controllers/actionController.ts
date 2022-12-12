@@ -38,6 +38,7 @@ export class ActionController {
   public postAction: PostActionHandler = async (req, res, next) => {
     try {
       const serviceId = req.body.service;
+      // TODO: fetch rotations, activeMode
       validateServiceOnRegistryMock(serviceId);
 
       const actionId = await this.manager.createAction(req.body);

@@ -23,7 +23,7 @@ const createActionRepository = (dataSource: DataSource) => {
     async findOneActionById(actionId: string): Promise<Action | null> {
       return this.findOneBy({ actionId });
     },
-    async createAction(params: ActionParams): Promise<InsertResult> {
+    async createAction(params: ActionParams & { rotation: string }): Promise<InsertResult> {
       return this.createQueryBuilder().insert().into(ActionEntity).values(params).returning([ACTION_IDENTIFIER_COLUMN]).execute();
     },
     async updateOneAction(actionId: string, updateParams: UpdatableActionParams): Promise<void> {

@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class InitialMigration1670248401047 implements MigrationInterface {
-  name = 'InitialMigration1670248401047';
+export class InitialMigration1670861872781 implements MigrationInterface {
+  name = 'InitialMigration1670861872781';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
@@ -9,6 +9,7 @@ export class InitialMigration1670248401047 implements MigrationInterface {
                 "action_id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "service" character varying NOT NULL,
                 "state" integer NOT NULL,
+                "rotation" character varying NOT NULL,
                 "action_status" "action"."action_action_status_enum" NOT NULL DEFAULT 'active',
                 "metadata" jsonb,
                 "closed_at" TIMESTAMP,
