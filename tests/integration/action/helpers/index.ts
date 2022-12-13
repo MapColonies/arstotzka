@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
-import { Action, ActionParams, ActionStatus, Sort } from '../../../../src/action/models/action';
+import { Action, ActionParams, ActionStatus, Parallelism, Sort } from '../../../../src/action/models/action';
+import { Service } from '../../../../src/action/models/registryMock';
 
 type HasProperty<K extends string, V> = {
   [P in K]: V;
@@ -21,7 +22,7 @@ export const generateAction = (params: Partial<GeneratedActionParams> = {}): Gen
   };
 };
 
-export const generateActionParams = (params: Partial<GeneratedActionParams> = {}): GeneratedActionParams => {
+export const generateActionParams = (params: Partial<ActionParams> = {}): ActionParams => {
   return {
     service: params.service ?? faker.datatype.string(),
     state: params.state ?? faker.datatype.number(),
@@ -48,4 +49,13 @@ export const sortByDate = <T extends HasProperty<K, Date | string>, K extends ke
     const dateB = +new Date(itemB[key]);
     return sort === 'desc' ? dateB - dateA : dateA - dateB;
   });
+};
+
+export const generateGetServiceResponse = (params: Partial<Service> = {}): Service => {
+  return {
+    serviceId: params.serviceId ?? faker.datatype.string(),
+    parallelism: params.parallelism ?? Parallelism.SINGLE,
+    serviceRotation: params.serviceRotation ?? faker.datatype.number(),
+    parentRotation: params.parentRotation ?? faker.datatype.number(),
+  };
 };

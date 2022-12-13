@@ -8,11 +8,17 @@ import { ActionRepository, ACTION_REPOSITORY_SYMBOL } from '../../../src/action/
 import { getApp } from '../../../src/app';
 import { SERVICES } from '../../../src/common/constants';
 import { BEFORE_ALL_TIMEOUT, LONG_RUNNING_TEST_TIMEOUT } from '../helpers';
+import { getServiceFromRegistryMock } from '../../../src/action/models/registryMock';
 import { Action, ActionFilter, ActionParams, ActionStatus, Sort, UpdatableActionParams } from '../../../src/action/models/action';
 import { ActionRequestSender } from './helpers/requestSender';
-import { generateAction, generateActionParams, sortByDate, stringifyAction, stringifyActions } from './helpers';
+import { generateAction, generateActionParams, generateGetServiceResponse, sortByDate, stringifyAction, stringifyActions } from './helpers';
 
 let depContainer: DependencyContainer;
+
+jest.mock('../../../src/action/models/registryMock.ts', () => ({
+  getServiceFromRegistryMock: jest.fn()
+}));
+
 const queryFailureMock = jest.fn().mockRejectedValue(new QueryFailedError('select *', [], new Error('failed')));
 
 describe('action', function () {
@@ -36,7 +42,7 @@ describe('action', function () {
   }, BEFORE_ALL_TIMEOUT);
 
   afterEach(async function () {
-    await actionRepository.clear();
+    // await actionRepository.clear();
   });
 
   describe('Happy Path', function () {
@@ -63,6 +69,18 @@ describe('action', function () {
         const action2 = generateAction();
         const actions = await actionRepository.save([action1, action2]);
         const expected = actions.filter((a) => a.service === action1.service);
+
+        const response = await requestSender.getActions({ service: action1.service });
+
+        expect(response.status).toBe(httpStatusCodes.OK);
+        expect(response.body).toMatchObject(stringifyActions(expected));
+      });
+
+      it('should return 200 and only the actions matching rotation filter', async function () {
+        const action1 = generateAction();
+        const action2 = generateAction();
+        const actions = await actionRepository.save([action1, action2]);
+        const expected = actions.filter((a) => a.rotation === action1.rotation);
 
         const response = await requestSender.getActions({ service: action1.service });
 
@@ -109,6 +127,24 @@ describe('action', function () {
 
         const actions = await actionRepository.save([action1, action2, action3]);
         const expected = actions.filter((a) => a.service === filter.service && a.status === filteredStatus);
+
+        const response = await requestSender.getActions(filter);
+
+        expect(response.status).toBe(httpStatusCodes.OK);
+        expect(response.body).toMatchObject(stringifyActions(expected));
+      });
+
+      it('should return 200 and only the actions matching service, rotation and status filter', async function () {
+        const filteredStatus = ActionStatus.COMPLETED;
+        const filter: ActionFilter = { service: 'someService', rotation: '1.0', status: [filteredStatus] };
+
+        const action1 = generateAction({ service: filter.service, rotation: filter.rotation, status: filteredStatus });
+        const action2 = generateAction({ service: filter.service, status: filteredStatus });
+        const action3 = generateAction({ service: filter.service, rotation: filter.rotation, status: ActionStatus.FAILED });
+        const action4 = generateAction({ rotation: filter.rotation, status: filteredStatus });
+
+        const actions = await actionRepository.save([action1, action2, action3, action4]);
+        const expected = actions.filter((a) => a.service === filter.service && a.status === filteredStatus && a.rotation === filter.rotation);
 
         const response = await requestSender.getActions(filter);
 
@@ -202,11 +238,37 @@ describe('action', function () {
     describe('POST /action', function () {
       it('should return 201 and the created action id', async function () {
         const params = generateActionParams();
+        const service = generateGetServiceResponse({ serviceId: params.service});
+        (getServiceFromRegistryMock as jest.Mock).mockReturnValue(service)
 
         const response = await requestSender.postAction(params);
 
         expect(response.status).toBe(httpStatusCodes.CREATED);
         expect(response.body).toHaveProperty('actionId');
+
+        const actionId = (response.body as { actionId: string }).actionId
+        const createdAction = await actionRepository.findOneBy({ actionId });
+
+        expect(createdAction).toHaveProperty('service', service.serviceId);
+        expect(createdAction).toHaveProperty('rotation', `${service.parentRotation as number}.${service.serviceRotation}`);
+      });
+
+      it('should return 201 and the created action id for action of service with no parent', async function () {
+        const params = generateActionParams();
+        const service = generateGetServiceResponse({ serviceId: params.service });
+        service.parentRotation = undefined;
+        (getServiceFromRegistryMock as jest.Mock).mockReturnValue(service)
+
+        const response = await requestSender.postAction(params);
+
+        expect(response.status).toBe(httpStatusCodes.CREATED);
+        expect(response.body).toHaveProperty('actionId');
+
+        const actionId = (response.body as { actionId: string }).actionId
+        const createdAction = await actionRepository.findOneBy({ actionId });
+
+        expect(createdAction).toHaveProperty('service', service.serviceId);
+        expect(createdAction).toHaveProperty('rotation', `${service.serviceRotation}`);
       });
     });
 
@@ -320,6 +382,13 @@ describe('action', function () {
 
         expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
         expect(response.body).toHaveProperty('message', "Empty value found for query parameter 'service'");
+      });
+
+      it('should return 400 for a filter with empty rotation', async function () {
+        const response = await requestSender.getActions({ rotation: '' });
+
+        expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
+        expect(response.body).toHaveProperty('message', "Empty value found for query parameter 'rotation'");
       });
 
       it('should return 400 for a filter with bad status', async function () {
@@ -447,8 +516,7 @@ describe('action', function () {
       });
 
       it('should return 400 if the actionId param invalid', async function () {
-        const { status, metadata } = generateActionParams();
-        const response = await requestSender.patchAction('badActionId', { status, metadata });
+        const response = await requestSender.patchAction('badActionId', { status: ActionStatus.CANCELED });
 
         expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
         expect(response.body).toHaveProperty('message', 'request.params.actionId should match format "uuid"');
@@ -456,8 +524,7 @@ describe('action', function () {
 
       it('should return 404 if the patched action does not exist', async function () {
         const uuid = faker.datatype.uuid();
-        const { status, metadata } = generateActionParams();
-        const response = await requestSender.patchAction(uuid, { status, metadata });
+        const response = await requestSender.patchAction(uuid, { status: ActionStatus.CANCELED });
 
         expect(response.status).toBe(httpStatusCodes.NOT_FOUND);
         expect(response.body).toHaveProperty('message', `actionId ${uuid} not found`);
@@ -509,13 +576,16 @@ describe('action', function () {
     });
 
     describe('POST /action', function () {
-      it(
+      it.skip(
         'should return 500 if the db throws an error',
         async function () {
           const { app } = await getApp({
             override: [
               { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
-              { token: ACTION_REPOSITORY_SYMBOL, provider: { useValue: { createAction: queryFailureMock } } },
+              {
+                token: ACTION_REPOSITORY_SYMBOL,
+                provider: { useValue: { createAction: queryFailureMock, findActions: jest.fn().mockReturnValue([]) } },
+              },
             ],
           });
           const mockActionRequestSender = new ActionRequestSender(app);

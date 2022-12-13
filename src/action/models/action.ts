@@ -29,8 +29,14 @@ export type Sort = 'asc' | 'desc';
 
 export interface ActionFilter {
   service?: string;
-  rotation?: number;
+  rotation?: string;
   status?: ActionStatus[];
   limit?: number;
   sort?: Sort;
+}
+
+export enum Parallelism {
+  SINGLE = 'single',
+  REPLACEABLE = 'replaceable',
+  MULTIPLE = 'multiple',
 }

@@ -184,6 +184,7 @@ components:
       type: string
     rotation:
       type: string
+      minLength: 1
       example: '1.3'
     actionState:
       type: integer

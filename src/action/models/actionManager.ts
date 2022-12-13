@@ -3,8 +3,10 @@ import { inject, injectable } from 'tsyringe';
 import { SERVICES } from '../../common/constants';
 import { ACTION_IDENTIFIER_COLUMN } from '../DAL/typeorm/action';
 import { ActionRepository, ACTION_CLOSED_STATUSES, ACTION_REPOSITORY_SYMBOL } from '../DAL/typeorm/actionRepository';
-import { Action, ActionFilter, ActionParams, UpdatableActionParams } from './action';
-import { ActionAlreadyClosedError, ActionNotFoundError } from './errors';
+import { Action, ActionFilter, ActionParams, ActionStatus, Parallelism, UpdatableActionParams } from './action';
+import { ActionAlreadyClosedError, ActionNotFoundError, ParallelismMismatchError } from './errors';
+import { getServiceFromRegistryMock, Service } from './registryMock';
+import { parallelismToMaxActive, stringifyRotation } from './util';
 
 @injectable()
 export class ActionManager {
@@ -20,10 +22,33 @@ export class ActionManager {
   }
 
   public async createAction(params: ActionParams): Promise<string> {
-    this.logger.info({ msg: 'creating action with the following params', params });
+    const serviceId = params.service;
+    this.logger.info({ msg: 'fetching service from registry', serviceId });
 
-    const creationRes = await this.actionRepository.createAction({ ...params, rotation: '1.0' });
-    const actionId = creationRes.identifiers[0][ACTION_IDENTIFIER_COLUMN] as string;
+    const service = getServiceFromRegistryMock(serviceId);
+    console.log(service);
+    this.logger.info({ msg: "validating service's action parallelism", service });
+
+    if (service.parallelism === Parallelism.SINGLE || service.parallelism === Parallelism.REPLACEABLE) {
+      await this.validateParallelism(service);
+    }
+
+    this.logger.info({ msg: 'attempting to create action with the following params', params, ...service });
+
+    let actionId: string;
+
+    const actionParams = { ...params, rotation: stringifyRotation(service.serviceRotation, service.parentRotation) };
+
+    if (service.parallelism === Parallelism.SINGLE || service.parallelism === Parallelism.MULTIPLE) {
+      const creationResult = await this.actionRepository.createAction(actionParams);
+      actionId = creationResult.identifiers[0][ACTION_IDENTIFIER_COLUMN] as string;
+    } else {
+      const creationResult = await this.actionRepository.updateAndCreateInTransaction(
+        { status: ActionStatus.CANCELED, metadata: { closingReason: 'canceled by parallelism rules' } },
+        actionParams
+      );
+      actionId = creationResult.identifiers[0][ACTION_IDENTIFIER_COLUMN] as string;
+    }
 
     this.logger.info({ msg: 'created action', actionId });
 
@@ -46,5 +71,17 @@ export class ActionManager {
     this.logger.info({ msg: 'updating action with the follwing params', actionId, params: updateParams });
 
     await this.actionRepository.updateOneAction(actionId, updateParams);
+  }
+
+  private async validateParallelism(service: Service): Promise<unknown> {
+    const maxActiveActionsAllowed = parallelismToMaxActive(service.parallelism);
+    const activeActions = await this.getActions({ service: service.serviceId, status: [ActionStatus.ACTIVE], limit: maxActiveActionsAllowed + 1 });
+
+    if (activeActions.length > maxActiveActionsAllowed) {
+      this.logger.error({ msg: 'service parallelism mismatch', ...service, activeActions });
+      throw new ParallelismMismatchError(`service ${service.serviceId} has mismatched parallelism`);
+    }
+
+    return activeActions;
   }
 }

@@ -18,3 +18,10 @@ export class ServiceNotRecognizedByRegistry extends Error {
     Object.setPrototypeOf(this, ServiceNotRecognizedByRegistry.prototype);
   }
 }
+
+export class ParallelismMismatchError extends Error {
+  public constructor(message: string) {
+    super(message);
+    Object.setPrototypeOf(this, ParallelismMismatchError.prototype);
+  }
+}
