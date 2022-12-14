@@ -140,12 +140,6 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/error'
-    Unauthorized:
-      description: Unauthorized Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/error'
     Conflict:
       description: Conflict
       content:
