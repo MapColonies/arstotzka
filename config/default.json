@@ -38,6 +38,6 @@
       "cert": ""
     },
     "database": "postgres",
-    "schema": "public"
+    "schema": "actiony"
   }
 }

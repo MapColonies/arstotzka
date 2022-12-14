@@ -1,16 +1,19 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class InitialMigration1670861872781 implements MigrationInterface {
-  name = 'InitialMigration1670861872781';
+export class InitialMigration1671032411845 implements MigrationInterface {
+  public name = 'InitialMigration1671032411845';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
-            CREATE TABLE "action"."action" (
+            CREATE TYPE "actiony"."action_action_status_enum" AS ENUM('active', 'completed', 'failed', 'canceled')
+        `);
+    await queryRunner.query(`
+            CREATE TABLE "actiony"."action" (
                 "action_id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "service" character varying NOT NULL,
                 "state" integer NOT NULL,
                 "rotation" character varying NOT NULL,
-                "action_status" "action"."action_action_status_enum" NOT NULL DEFAULT 'active',
+                "action_status" "actiony"."action_action_status_enum" NOT NULL DEFAULT 'active',
                 "metadata" jsonb,
                 "closed_at" TIMESTAMP,
                 "created_at" TIMESTAMP NOT NULL DEFAULT now(),
@@ -19,16 +22,19 @@ export class InitialMigration1670861872781 implements MigrationInterface {
             )
         `);
     await queryRunner.query(`
-            CREATE INDEX "IDX_ff9f017f7c5f757d8a89a027e1" ON "action"."action" ("service")
+            CREATE INDEX "IDX_ff9f017f7c5f757d8a89a027e1" ON "actiony"."action" ("service")
         `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
-            DROP INDEX "action"."IDX_ff9f017f7c5f757d8a89a027e1"
+            DROP INDEX "actiony"."IDX_ff9f017f7c5f757d8a89a027e1"
         `);
     await queryRunner.query(`
-            DROP TABLE "action"."action"
+            DROP TABLE "actiony"."action"
+        `);
+    await queryRunner.query(`
+            DROP TYPE "actiony"."action_action_status_enum"
         `);
   }
 }
