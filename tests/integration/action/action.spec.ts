@@ -2,24 +2,23 @@ import jsLogger from '@map-colonies/js-logger';
 import { trace } from '@opentelemetry/api';
 import httpStatusCodes from 'http-status-codes';
 import { DependencyContainer } from 'tsyringe';
-import { QueryFailedError } from 'typeorm';
+import { In, QueryFailedError } from 'typeorm';
 import { faker } from '@faker-js/faker';
 import { ActionRepository, ACTION_REPOSITORY_SYMBOL } from '../../../src/action/DAL/typeorm/actionRepository';
 import { getApp } from '../../../src/app';
 import { SERVICES } from '../../../src/common/constants';
 import { BEFORE_ALL_TIMEOUT, LONG_RUNNING_TEST_TIMEOUT } from '../helpers';
 import { getServiceFromRegistryMock } from '../../../src/action/models/registryMock';
-import { Action, ActionFilter, ActionParams, ActionStatus, Sort, UpdatableActionParams } from '../../../src/action/models/action';
+import { Action, ActionFilter, ActionParams, ActionStatus, Parallelism, Sort, UpdatableActionParams } from '../../../src/action/models/action';
+import { ServiceNotRecognizedByRegistry } from '../../../src/action/models/errors';
 import { ActionRequestSender } from './helpers/requestSender';
 import { generateAction, generateActionParams, generateGetServiceResponse, sortByDate, stringifyAction, stringifyActions } from './helpers';
 
 let depContainer: DependencyContainer;
 
 jest.mock('../../../src/action/models/registryMock.ts', () => ({
-  getServiceFromRegistryMock: jest.fn()
+  getServiceFromRegistryMock: jest.fn(),
 }));
-
-const queryFailureMock = jest.fn().mockRejectedValue(new QueryFailedError('select *', [], new Error('failed')));
 
 describe('action', function () {
   let requestSender: ActionRequestSender;
@@ -41,8 +40,9 @@ describe('action', function () {
     requestSender = new ActionRequestSender(app);
   }, BEFORE_ALL_TIMEOUT);
 
-  afterEach(async function () {
-    // await actionRepository.clear();
+  beforeEach(async function () {
+    await actionRepository.clear();
+    jest.resetAllMocks();
   });
 
   describe('Happy Path', function () {
@@ -238,15 +238,15 @@ describe('action', function () {
     describe('POST /action', function () {
       it('should return 201 and the created action id', async function () {
         const params = generateActionParams();
-        const service = generateGetServiceResponse({ serviceId: params.service});
-        (getServiceFromRegistryMock as jest.Mock).mockReturnValue(service)
+        const service = generateGetServiceResponse({ serviceId: params.service });
+        (getServiceFromRegistryMock as jest.Mock).mockResolvedValue(service);
 
         const response = await requestSender.postAction(params);
 
         expect(response.status).toBe(httpStatusCodes.CREATED);
         expect(response.body).toHaveProperty('actionId');
 
-        const actionId = (response.body as { actionId: string }).actionId
+        const actionId = (response.body as { actionId: string }).actionId;
         const createdAction = await actionRepository.findOneBy({ actionId });
 
         expect(createdAction).toHaveProperty('service', service.serviceId);
@@ -257,24 +257,88 @@ describe('action', function () {
         const params = generateActionParams();
         const service = generateGetServiceResponse({ serviceId: params.service });
         service.parentRotation = undefined;
-        (getServiceFromRegistryMock as jest.Mock).mockReturnValue(service)
+        (getServiceFromRegistryMock as jest.Mock).mockResolvedValue(service);
 
         const response = await requestSender.postAction(params);
 
         expect(response.status).toBe(httpStatusCodes.CREATED);
         expect(response.body).toHaveProperty('actionId');
 
-        const actionId = (response.body as { actionId: string }).actionId
+        const actionId = (response.body as { actionId: string }).actionId;
         const createdAction = await actionRepository.findOneBy({ actionId });
 
         expect(createdAction).toHaveProperty('service', service.serviceId);
         expect(createdAction).toHaveProperty('rotation', `${service.serviceRotation}`);
+      });
+
+      it('should return 201 and the created action id for each action of service with replaceable parallelism and also close it', async function () {
+        const params = generateActionParams();
+        const service = generateGetServiceResponse({ serviceId: params.service, parallelism: Parallelism.REPLACEABLE });
+        (getServiceFromRegistryMock as jest.Mock).mockResolvedValue(service);
+
+        const response1 = await requestSender.postAction(params);
+
+        expect(response1.status).toBe(httpStatusCodes.CREATED);
+        expect(response1.body).toHaveProperty('actionId');
+
+        const actionId1 = (response1.body as { actionId: string }).actionId;
+        const action1BeforeClosure = await actionRepository.findOneBy({ actionId: actionId1 });
+        expect(action1BeforeClosure?.metadata).not.toHaveProperty('closingReason');
+
+        const response2 = await requestSender.postAction(params);
+
+        expect(response2.status).toBe(httpStatusCodes.CREATED);
+        expect(response2.body).toHaveProperty('actionId');
+
+        const actionId2 = (response2.body as { actionId: string }).actionId;
+        const [action1, action2] = await actionRepository.find({ where: { actionId: In([actionId1, actionId2]) }, order: { createdAt: 'asc' } });
+
+        expect(action1).toHaveProperty('service', service.serviceId);
+        expect(action1).toHaveProperty('rotation', `${service.parentRotation as number}.${service.serviceRotation}`);
+        expect(action1).toHaveProperty('status', ActionStatus.CANCELED);
+        expect(action1.metadata).toHaveProperty('closingReason', 'canceled by parallelism rules');
+        expect(action1.metadata).toMatchObject(action1BeforeClosure?.metadata as Record<string, unknown>);
+
+        expect(action2).toHaveProperty('service', service.serviceId);
+        expect(action2).toHaveProperty('rotation', `${service.parentRotation as number}.${service.serviceRotation}`);
+        expect(action2).toHaveProperty('status', ActionStatus.ACTIVE);
+      });
+
+      it('should return 201 and the created action id for each action of service with multi parallelism', async function () {
+        const params = generateActionParams();
+        const service = generateGetServiceResponse({ serviceId: params.service, parallelism: Parallelism.MULTIPLE });
+        (getServiceFromRegistryMock as jest.Mock).mockResolvedValue(service);
+
+        const response1 = await requestSender.postAction(params);
+
+        expect(response1.status).toBe(httpStatusCodes.CREATED);
+        expect(response1.body).toHaveProperty('actionId');
+
+        const actionId1 = (response1.body as { actionId: string }).actionId;
+        const createdAction1 = await actionRepository.findOneBy({ actionId: actionId1 });
+
+        expect(createdAction1).toHaveProperty('service', service.serviceId);
+        expect(createdAction1).toHaveProperty('rotation', `${service.parentRotation as number}.${service.serviceRotation}`);
+
+        const response2 = await requestSender.postAction(params);
+
+        expect(response2.status).toBe(httpStatusCodes.CREATED);
+        expect(response2.body).toHaveProperty('actionId');
+
+        const actionId2 = (response2.body as { actionId: string }).actionId;
+        const createdAction2 = await actionRepository.findOneBy({ actionId: actionId2 });
+
+        expect(createdAction2).toHaveProperty('service', service.serviceId);
+        expect(createdAction2).toHaveProperty('rotation', `${service.parentRotation as number}.${service.serviceRotation}`);
       });
     });
 
     describe('PATCH /action/{actionId}', function () {
       it('should return 200 and update the relevant action status', async function () {
         const params = generateActionParams();
+        const service = generateGetServiceResponse({ serviceId: params.service });
+        (getServiceFromRegistryMock as jest.Mock).mockResolvedValue(service);
+
         const postActionRes = await requestSender.postAction(params);
         expect(postActionRes.status).toBe(httpStatusCodes.CREATED);
         const actionId = (postActionRes.body as { actionId: string }).actionId;
@@ -295,6 +359,9 @@ describe('action', function () {
         const createdMetadata = { k1: 'v1', k2: 'v2' };
         const patchedMetadata = { k1: 'patched', k3: 'added' };
         const params = generateActionParams({ metadata: createdMetadata });
+        const service = generateGetServiceResponse({ serviceId: params.service });
+        (getServiceFromRegistryMock as jest.Mock).mockResolvedValue(service);
+
         const postActionRes = await requestSender.postAction(params);
         expect(postActionRes.status).toBe(httpStatusCodes.CREATED);
         const actionId = (postActionRes.body as { actionId: string }).actionId;
@@ -317,6 +384,9 @@ describe('action', function () {
     describe('FLOW', function () {
       it('should post get and patch an action through its lifecycle', async function () {
         const params = generateActionParams();
+        const service = generateGetServiceResponse({ serviceId: params.service });
+        (getServiceFromRegistryMock as jest.Mock).mockResolvedValue(service);
+
         const postResponse = await requestSender.postAction(params);
         expect(postResponse.status).toBe(httpStatusCodes.CREATED);
         const actionId = (postResponse.body as { actionId: string }).actionId;
@@ -442,18 +512,49 @@ describe('action', function () {
       });
 
       it('should return 409 if the requesting service is not recognized by the registry', async function () {
-        const params = generateActionParams({ service: 'badService' });
+        const service = 'unknownService';
+        const expectedMessage = `could not recognize service ${service} on registry`;
+        (getServiceFromRegistryMock as jest.Mock).mockRejectedValue(new ServiceNotRecognizedByRegistry(expectedMessage));
+
+        const params = generateActionParams({ service });
 
         const response = await requestSender.postAction(params);
 
         expect(response.status).toBe(httpStatusCodes.CONFLICT);
-        expect(response.body).toHaveProperty('message', 'could not recognize service badService on registry');
+        expect(response.body).toHaveProperty('message', expectedMessage);
+      });
+
+      it('should return 409 if the requesting service has single parallelism and an already active action exists', async function () {
+        const service = generateGetServiceResponse({ parallelism: Parallelism.SINGLE });
+        (getServiceFromRegistryMock as jest.Mock).mockResolvedValue(service);
+        const action = generateAction({ service: service.serviceId });
+        await actionRepository.save(action);
+
+        const response = await requestSender.postAction({ service: action.service, state: action.state });
+
+        expect(response.status).toBe(httpStatusCodes.CONFLICT);
+        expect(response.body).toHaveProperty('message', `service ${service.serviceId} has mismatched parallelism`);
+      });
+
+      it('should return 409 if the requesting service has replaceable parallelism and an already active actions exists', async function () {
+        const service = generateGetServiceResponse({ parallelism: Parallelism.REPLACEABLE });
+        (getServiceFromRegistryMock as jest.Mock).mockResolvedValue(service);
+        const action1 = generateAction({ service: service.serviceId });
+        const action2 = generateAction({ service: service.serviceId });
+        await actionRepository.save([action1, action2]);
+
+        const response = await requestSender.postAction({ service: service.serviceId, state: action2.state });
+
+        expect(response.status).toBe(httpStatusCodes.CONFLICT);
+        expect(response.body).toHaveProperty('message', `service ${service.serviceId} has mismatched parallelism`);
       });
     });
 
     describe('PATCH /action/{actionId}', function () {
       it('should return 400 if the request body has an invalid status', async function () {
         const params = generateActionParams();
+        const service = generateGetServiceResponse({ serviceId: params.service });
+        (getServiceFromRegistryMock as jest.Mock).mockResolvedValue(service);
 
         const postActionRes = await requestSender.postAction(params);
 
@@ -471,6 +572,8 @@ describe('action', function () {
 
       it('should return 400 if the request body has an invalid metadata', async function () {
         const params = generateActionParams();
+        const service = generateGetServiceResponse({ serviceId: params.service });
+        (getServiceFromRegistryMock as jest.Mock).mockResolvedValue(service);
 
         const postActionRes = await requestSender.postAction(params);
 
@@ -485,6 +588,8 @@ describe('action', function () {
 
       it('should return 400 if the request body has additional properties', async function () {
         const params = generateActionParams();
+        const service = generateGetServiceResponse({ serviceId: params.service });
+        (getServiceFromRegistryMock as jest.Mock).mockResolvedValue(service);
 
         const postActionRes = await requestSender.postAction(params);
 
@@ -503,6 +608,8 @@ describe('action', function () {
 
       it('should return 400 if the request body is empty', async function () {
         const params = generateActionParams();
+        const service = generateGetServiceResponse({ serviceId: params.service });
+        (getServiceFromRegistryMock as jest.Mock).mockResolvedValue(service);
 
         const postActionRes = await requestSender.postAction(params);
 
@@ -533,6 +640,9 @@ describe('action', function () {
       it('should return 409 if the patched action has already been closed', async function () {
         const closingStatus = ActionStatus.COMPLETED;
         const params = generateActionParams();
+        const service = generateGetServiceResponse({ serviceId: params.service });
+        (getServiceFromRegistryMock as jest.Mock).mockResolvedValue(service);
+
         let response = await requestSender.postAction(params);
         expect(response.status).toBe(httpStatusCodes.CREATED);
         const actionId = (response.body as { actionId: string }).actionId;
@@ -558,6 +668,8 @@ describe('action', function () {
       it(
         'should return 500 if the db throws an error',
         async function () {
+          const queryFailureMock = jest.fn().mockRejectedValue(new QueryFailedError('select *', [], new Error('failed')));
+
           const { app } = await getApp({
             override: [
               { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
@@ -576,21 +688,26 @@ describe('action', function () {
     });
 
     describe('POST /action', function () {
-      it.skip(
+      it(
         'should return 500 if the db throws an error',
         async function () {
+          const queryFailureMock = jest.fn().mockRejectedValue(new QueryFailedError('select *', [], new Error('failed')));
+
           const { app } = await getApp({
             override: [
               { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
               {
                 token: ACTION_REPOSITORY_SYMBOL,
-                provider: { useValue: { createAction: queryFailureMock, findActions: jest.fn().mockReturnValue([]) } },
+                provider: { useValue: { createAction: queryFailureMock, findActions: jest.fn().mockResolvedValue([]) } },
               },
             ],
           });
           const mockActionRequestSender = new ActionRequestSender(app);
 
           const params = generateActionParams();
+          const service = generateGetServiceResponse({ serviceId: params.service, parallelism: Parallelism.MULTIPLE });
+          (getServiceFromRegistryMock as jest.Mock).mockResolvedValue(service);
+
           const response = await mockActionRequestSender.postAction(params);
 
           expect(response.status).toBe(httpStatusCodes.INTERNAL_SERVER_ERROR);
@@ -604,6 +721,8 @@ describe('action', function () {
       it(
         'should return 500 if the db throws an error',
         async function () {
+          const queryFailureMock = jest.fn().mockRejectedValue(new QueryFailedError('select *', [], new Error('failed')));
+
           const { app } = await getApp({
             override: [
               { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },

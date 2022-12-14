@@ -21,7 +21,7 @@ describe('docs', function () {
   }, BEFORE_ALL_TIMEOUT);
 
   describe('Happy Path', function () {
-    it.skip('should return 301 status code', async function () {
+    it('should return 301 status code', async function () {
       const response = await requestSender.getDocs();
 
       expect(response.status).toBe(httpStatusCodes.MOVED_PERMANENTLY);

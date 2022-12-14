@@ -48,9 +48,9 @@ const createActionRepository = (dataSource: DataSource) => {
 
       await scopedManager.createQueryBuilder(ActionEntity, 'action').update(finalParams).where({ actionId }).execute();
     },
-    async updateAndCreateInTransaction(updateParams: UpdatableActionParams, params: ActionParams & { rotation: string }): Promise<InsertResult> {
+    async updateLastAndCreate(updateParams: UpdatableActionParams, params: ActionParams & { rotation: string }): Promise<InsertResult> {
       return this.manager.connection.transaction(async (entityManager) => {
-        const actions = await this.findActions({ service: params.service, status: [ActionStatus.ACTIVE], limit: 1 }, entityManager);
+        const actions = await this.findActions({ service: params.service, status: [ActionStatus.ACTIVE], sort: 'desc', limit: 1 }, entityManager);
 
         if (actions.length !== 0) {
           const action = actions[0];

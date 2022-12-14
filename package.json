@@ -18,7 +18,7 @@
     "migration:generate": "npm run typeorm migration:generate",
     "migration:run": "npm run typeorm migration:run",
     "migration:revert": "npm run typeorm migration:revert",
-    "test": "npm run test:unit && npm run test:integration",
+    "test": "npm run test:integration",
     "prebuild": "npm run clean",
     "build": "tsc --project tsconfig.build.json && npm run assets:copy",
     "start": "npm run build && cd dist && node ./index.js",

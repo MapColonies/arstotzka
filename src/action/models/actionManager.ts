@@ -23,10 +23,11 @@ export class ActionManager {
 
   public async createAction(params: ActionParams): Promise<string> {
     const serviceId = params.service;
+
     this.logger.info({ msg: 'fetching service from registry', serviceId });
 
-    const service = getServiceFromRegistryMock(serviceId);
-    console.log(service);
+    const service = await getServiceFromRegistryMock(serviceId);
+
     this.logger.info({ msg: "validating service's action parallelism", service });
 
     if (service.parallelism === Parallelism.SINGLE || service.parallelism === Parallelism.REPLACEABLE) {
@@ -43,7 +44,7 @@ export class ActionManager {
       const creationResult = await this.actionRepository.createAction(actionParams);
       actionId = creationResult.identifiers[0][ACTION_IDENTIFIER_COLUMN] as string;
     } else {
-      const creationResult = await this.actionRepository.updateAndCreateInTransaction(
+      const creationResult = await this.actionRepository.updateLastAndCreate(
         { status: ActionStatus.CANCELED, metadata: { closingReason: 'canceled by parallelism rules' } },
         actionParams
       );

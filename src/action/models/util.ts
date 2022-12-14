@@ -12,7 +12,7 @@ export const parallelismToMaxActive = (parallelism: Parallelism): number => {
 };
 
 export const stringifyRotation = (serviceRotation: number, parentServiceRotation?: number): string => {
-// TODO: should be x.0 or 0.x instead?
+  // TODO: should be x.0 or 0.x instead?
   if (parentServiceRotation === undefined) {
     return `${serviceRotation}`;
   }
