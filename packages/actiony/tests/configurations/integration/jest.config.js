@@ -1,17 +1,9 @@
+const base = require('../../../../../jest.config.base');
+
 module.exports = {
-  transform: {
-    '^.+\\.ts$': 'ts-jest',
-  },
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.test.json',
-    },
-  },
-  coverageReporters: ['text', 'html'],
-  collectCoverage: true,
-  collectCoverageFrom: ['<rootDir>/src/**/*.ts', '!*/node_modules/', '!/vendor/**', '!*/common/**', '!**/models/**', '!<rootDir>/src/*'],
-  coverageDirectory: '<rootDir>/coverage',
+  ...base,
   rootDir: '../../../.',
+  displayName: 'actiony',
   testMatch: ['<rootDir>/tests/integration/**/*.spec.ts'],
   setupFiles: ['<rootDir>/tests/configurations/jest.setup.ts'],
   setupFilesAfterEnv: ['jest-openapi', '<rootDir>/tests/configurations/initJestOpenapi.setup.ts'],
@@ -22,15 +14,4 @@ module.exports = {
       { multipleReportsUnitePath: './reports', pageTitle: 'integration', publicPath: './reports', filename: 'integration.html' },
     ],
   ],
-  moduleDirectories: ['node_modules', 'src'],
-  preset: 'ts-jest',
-  testEnvironment: 'node',
-  coverageThreshold: {
-    global: {
-      branches: 80,
-      functions: 80,
-      lines: 80,
-      statements: -10,
-    },
-  },
 };

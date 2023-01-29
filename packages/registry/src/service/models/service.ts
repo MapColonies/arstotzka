@@ -1,52 +1,52 @@
 export enum Parallelism {
-    SINGLE = 'single',
-    REPLACEABLE = 'replaceable',
-    MULTIPLE = 'multiple',
+  SINGLE = 'single',
+  REPLACEABLE = 'replaceable',
+  MULTIPLE = 'multiple',
 }
 
 export enum ServiceType {
-    PRODUCER = 'producer',
-    CONSUMER = 'consumer',
+  PRODUCER = 'producer',
+  CONSUMER = 'consumer',
 }
 
 export interface INamespace {
-    namespaceId: string;
+  namespaceId: string;
 
-    name: string;
+  name: string;
 
-    createdAt: Date;
+  createdAt: Date;
 
-    updatedAt: Date;
+  updatedAt: Date;
 }
 
 export interface IService {
-    serviceId: string;
+  serviceId: string;
 
-    namespaceId: string;
+  namespaceId: string;
 
-    rotationId: number;
+  rotationId: number;
 
-    name: string;
+  name: string;
 
-    parallalism: Parallelism;
+  parallalism: Parallelism;
 
-    type: ServiceType;
+  type: ServiceType;
 
-    parentServiceId: string | null;
+  parentServiceId: string | null;
 
-    createdAt: Date;
+  createdAt: Date;
 
-    updatedAt: Date;
+  updatedAt: Date;
 }
 
 export interface IRotation {
-    serviceId: string;
+  serviceId: string;
 
-    rotationId: number;
+  rotationId: number;
 
-    description: string;
+  description: string;
 
-    createdAt: Date;
+  createdAt: Date;
 
-    updatedAt: Date;
+  updatedAt: Date;
 }
