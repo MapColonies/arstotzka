@@ -6,8 +6,8 @@
   "scripts": {
     "test:unit": "jest --config=./tests/configurations/unit/jest.config.js",
     "test:integration": "jest --config=./tests/configurations/integration/jest.config.js",
-    "format": "prettier --check .",
-    "format:fix": "prettier --write .",
+    "format": "prettier --check . --ignore-path ../../.prettierignore",
+    "format:fix": "prettier --write . --ignore-path ../../.prettierignore",
     "prelint:fix": "npm run format:fix",
     "prelint": "npm run format",
     "lint:openapi": "openapi lint ./openapi3.yaml",
