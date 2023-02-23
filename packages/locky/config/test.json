@@ -1,0 +1,10 @@
+{
+  "db": {
+    "host": "postgres",
+    "schema": "locky",
+    "username": "postgres",
+    "password": "1234",
+    "database": "root",
+    "enableSslAuth": false
+  }
+}
