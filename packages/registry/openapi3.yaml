@@ -1,58 +1,86 @@
 openapi: 3.0.1
 info:
-  title: service-name
-  description: basic template for map colonies service
+  title: registry
+  description: api for managing namespaces and services in the vector ecosystem
   version: 1.0.0
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
-
+tags:
+  - name: service
+    description: a service in the vector ecosystem
 paths:
-  /anotherResource:
+  /service/{serviceId}:
     get:
-      operationId: getAnotherResource
+      operationId: getService
       tags:
-        - anotherResource
-      summary: gets the resource
+        - service
+      summary: get detailed info on the service
+      parameters:
+        - $ref: '#/components/parameters/serviceId'
       responses:
         200:
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/anotherResource'
-  /resourceName:
-    get:
-      operationId: getResourceName
+                $ref: '#/components/schemas/service'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        5XX:
+          $ref: '#/components/responses/UnexpectedError'
+  /service/{serviceId}/rotate:
+    patch:
+      operationId: patchRotation
       tags:
-        - resourceName
-      summary: gets the resource
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/resource'
-    post:
-      operationId: createResource
-      tags:
-        - resourceName
-      summary: creates a new record of type resource
+        - service
+      summary: bump rotation for a service and its children
+      parameters:
+        - $ref: '#/components/parameters/serviceId'
       responses:
         201:
-          description: created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/resource'
+          description: bumped service rotation
         400:
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/error'
+          $ref: '#/components/responses/BadRequest'
+        409:
+          $ref: '#/components/responses/Conflict'
+        5XX:
+          $ref: '#/components/responses/UnexpectedError'
 components:
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    UnexpectedError:
+      description: Unexpected Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+  parameters:
+    serviceId:
+      in: path
+      name: serviceId
+      schema:
+        $ref: '#/components/schemas/serviceId'
+      required: true
   schemas:
     error:
       type: object
@@ -61,27 +89,69 @@ components:
       properties:
         message:
           type: string
-    resource:
+    serviceId:
+      type: string
+      format: uuid
+    namespaceId:
+      type: string
+      format: uuid
+    serviceName:
+      type: string
+    namespaceName:
+      type: string
+    rotation:
+      type: number
+      minimum: 1
+    serviceType:
+      type: string
+      enum:
+        - consumer
+        - producer
+    parallelism:
+      type: string
+      enum:
+        - single
+        - replaceable
+        - multiple
+    date:
+      type: string
+      format: date-time
+    service:
       type: object
-      required:
-        - id
-        - name
-        - description
       properties:
-        id:
-          type: number
-          format: int64
-        name:
-          type: string
-        description:
-          type: string
-    anotherResource:
-      type: object
+        namespaceId:
+          $ref: '#/components/schemas/namespaceId'
+        namespaceName:
+          $ref: '#/components/schemas/namespaceName'
+        serviceId:
+          $ref: '#/components/schemas/serviceId'
+        serviceName:
+          $ref: '#/components/schemas/serviceName'
+        serviceType:
+          $ref: '#/components/schemas/serviceType'
+        parentRotation:
+          $ref: '#/components/schemas/rotation'
+        rotation:
+          $ref: '#/components/schemas/rotation'
+        parallelism:
+          $ref: '#/components/schemas/parallelism'
+        parent:
+          $ref: '#/components/schemas/serviceId'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/serviceId'
+        createdAt:
+          $ref: '#/components/schemas/date'
+        updatedAt:
+          $ref: '#/components/schemas/date'
       required:
-        - kind
-        - isAlive
-      properties:
-        kind:
-          type: string
-        isAlive:
-          type: boolean
+        - serviceId
+        - serviceName
+        - namespaceId
+        - namespaceName
+        - parallelism
+        - serviceType
+        - rotation
+        - createdAt
+        - updatedAt

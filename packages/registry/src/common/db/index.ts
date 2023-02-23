@@ -15,7 +15,7 @@ const DB_TIMEOUT = 5000;
 
 export const DATA_SOURCE_PROVIDER = Symbol('dataSourceProvider');
 
-export const DB_ENTITIES = [Service, Namespace, Rotation];
+export const DB_ENTITIES = [Namespace, Service, Rotation];
 
 export const createDataSourceOptions = (dbConfig: DbConfig): DataSourceOptions => {
   const { enableSslAuth, sslPaths, ...connectionOptions } = dbConfig;

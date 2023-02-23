@@ -24,13 +24,11 @@ export interface IService {
 
   namespaceId: string;
 
-  rotationId: number;
-
   name: string;
 
   parallalism: Parallelism;
 
-  type: ServiceType;
+  serviceType: ServiceType;
 
   parentServiceId: string | null;
 
@@ -43,6 +41,8 @@ export interface IRotation {
   serviceId: string;
 
   rotationId: number;
+
+  parentRotationId?: number;
 
   description: string;
 

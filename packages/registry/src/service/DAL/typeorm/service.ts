@@ -15,13 +15,6 @@ export class Service implements IService {
   @JoinColumn({ name: 'namespace_id', referencedColumnName: 'namespaceId' })
   public namespace!: Namespace;
 
-  @Column({ name: 'rotation_id', type: 'integer' })
-  public rotationId!: number;
-
-  @ManyToOne(() => Rotation, (rotation) => rotation.rotationId)
-  @JoinColumn({ name: 'rotation_id' })
-  public rotation!: Rotation;
-
   @Column({ name: 'name' })
   public name!: string;
 
@@ -29,7 +22,7 @@ export class Service implements IService {
   public parallalism!: Parallelism;
 
   @Column({ name: 'service_type', type: 'enum', enum: ServiceType })
-  public type!: ServiceType;
+  public serviceType!: ServiceType;
 
   @Column({ name: 'parent_service_id', type: 'uuid', nullable: true })
   public parentServiceId!: string | null;
@@ -40,6 +33,9 @@ export class Service implements IService {
 
   @OneToMany(() => Service, (service) => service.parent)
   public children!: Service[];
+
+  @OneToMany(() => Rotation, (rotation) => rotation.service)
+  public rotations!: Rotation[];
 
   @CreateDateColumn({ name: 'created_at' })
   public createdAt!: Date;
