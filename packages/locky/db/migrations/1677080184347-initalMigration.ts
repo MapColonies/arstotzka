@@ -1,10 +1,10 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class InitalMigration1677080184347 implements MigrationInterface {
-    public name = 'initalMigration1677080184347'
+  public name = 'initalMigration1677080184347';
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             CREATE TABLE "locky"."lock" (
                 "lock_id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "service_ids" uuid array NOT NULL,
@@ -15,17 +15,17 @@ export class InitalMigration1677080184347 implements MigrationInterface {
                 CONSTRAINT "PK_3ffc00ceaccfb387b87cf81daa5" PRIMARY KEY ("lock_id")
             )
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             CREATE INDEX "IDX_fd158340963dc07b5dc043e989" ON "locky"."lock" ("service_ids")
         `);
-    }
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             DROP INDEX "locky"."IDX_fd158340963dc07b5dc043e989"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             DROP TABLE "locky"."lock"
         `);
-    }
+  }
 }

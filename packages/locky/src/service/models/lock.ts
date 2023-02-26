@@ -1,13 +1,13 @@
 export interface ILock {
-    lockId: string;
+  lockId: string;
 
-    serviceIds: string[];
+  serviceIds: string[];
 
-    expiresAt?: Date;
+  expiresAt?: Date;
 
-    reason?: string;
+  reason?: string;
 
-    createdAt: Date;
+  createdAt: Date;
 
-    updatedAt: Date;
+  updatedAt: Date;
 }
