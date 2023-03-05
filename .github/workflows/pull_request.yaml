@@ -3,23 +3,31 @@ name: pull_request
 on: [pull_request]
 
 jobs:
+
   eslint:
-    name: Run eslint
+    name: Run TS Project eslint
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node: [16.x, 18.x]
+
     steps:
-      - name: Check out Git repository
+      - name: Check out TS Project Git repository
         uses: actions/checkout@v2
 
       - name: Set up Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: 16
+          node-version: ${{ matrix.node }}
 
-      - name: Install dependencies
+      - name: Install TS Project dependencies
         run: npm ci
 
-      - name: Run linters
+      - name: Build Lerna
+        run: npx lerna run build
+
+      - name: Run TS Project linters
         uses: wearerequired/lint-action@v1
         with:
           github_token: ${{ secrets.github_token }}
@@ -47,11 +55,10 @@ jobs:
   tests:
     name: Run Tests
     runs-on: ubuntu-latest
-    container: node:16
 
     strategy:
       matrix:
-        node: [14.x, 16.x]
+        node: [16.x, 18.x]
 
     services:
       # Label used to access the service container
@@ -84,6 +91,9 @@ jobs:
       - name: Install Node.js dependencies
         run: npm ci
 
+      - name: Build Lerna
+        run: npx lerna run build
+
       - name: Install pg client
         run: |
           apt-get update && apt-get install -y lsb-release
@@ -93,12 +103,12 @@ jobs:
           apt-get install -y postgresql-client
 
       - name: Create schema
-        run: psql -h postgres -d postgres -U postgres -c 'CREATE SCHEMA actiony;'
+        run: psql -h postgres -d postgres -U postgres -c 'CREATE SCHEMA actiony; CREATE SCHEMA locky; CREATE SCHEMA registry;'
         env:
           PGPASSWORD: 1234
 
       - name: Run migrations
-        run: npm run typeorm -- migration:run
+        run: npx lerna run migration:run
         env:
           DB_HOST: postgres
           DB_PORT: 5432
@@ -106,23 +116,27 @@ jobs:
           DB_PASSWORD: 1234
 
       - name: Run tests
-        run: npm run test
+        run: npx lerna run test
 
       - uses: actions/upload-artifact@v2
         with:
           name: Test Reporters
-          path: reports/**
+          path: packages/**/reports/**
 
   build_image:
     name: Build Image
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        package: [actiony, locky, registry]
 
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v2
 
       - name: build Docker image
-        run: docker build -t test-build:latest .
+        run: docker build -f ./packages/${{ matrix.package }}/Dockerfile -t ${{ matrix.package }}:latest .
 
       - name: build migrations Docker image
-        run: docker build -f ./migrations.Dockerfile -t test-migrations-build:latest .
+        run: docker build -f ./packages/${{ matrix.package }}/migrations.Dockerfile -t ${{ matrix.package }}-test-migrations-build:latest .
