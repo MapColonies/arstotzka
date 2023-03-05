@@ -4,8 +4,8 @@ import { Service } from './service';
 
 @Entity()
 export class Namespace implements INamespace {
-  @PrimaryGeneratedColumn('uuid', { name: 'namespace_id' })
-  public namespaceId!: string;
+  @PrimaryGeneratedColumn('increment', { name: 'namespace_id', type: 'integer' })
+  public namespaceId!: number;
 
   @Column({ name: 'name' })
   public name!: string;

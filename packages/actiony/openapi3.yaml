@@ -22,7 +22,7 @@ paths:
           description: >-
             returned actions matching the following service
           schema:
-            $ref: '#/components/schemas/service'
+            $ref: '#/components/schemas/serviceId'
         - in: query
           name: status
           description: >-
@@ -35,6 +35,12 @@ paths:
           name: rotation
           description: >-
             returned actions matching the following service rotation
+          schema:
+            $ref: '#/components/schemas/rotation'
+        - in: query
+          name: parentRotation
+          description: >-
+            returned actions matching the following service parent rotation
           schema:
             $ref: '#/components/schemas/rotation'
         - in: query
@@ -71,15 +77,18 @@ paths:
             schema:
               type: object
               properties:
-                service:
-                  $ref: '#/components/schemas/service'
+                serviceId:
+                  $ref: '#/components/schemas/serviceId'
                 state:
                   $ref: '#/components/schemas/actionState'
                 metadata:
                   $ref: '#/components/schemas/actionMetadata'
+                namespaceId:
+                  $ref: '#/components/schemas/namespaceId'
               required:
-                - service
+                - serviceId
                 - state
+                - namespaceId
               additionalProperties: false
       responses:
         '201':
@@ -174,12 +183,15 @@ components:
     actionId:
       type: string
       format: uuid
-    service:
+    serviceId:
       type: string
+      format: uuid
+    namespaceId:
+      type: number
+      minimum: 1
     rotation:
-      type: string
-      minLength: 1
-      example: '1.3'
+      type: number
+      minimum: 0
     actionState:
       type: integer
       minimum: 0
@@ -210,9 +222,13 @@ components:
       properties:
         actionId:
           $ref: '#/components/schemas/actionId'
-        service:
-          $ref: '#/components/schemas/service'
-        rotation:
+        serviceId:
+          $ref: '#/components/schemas/serviceId'
+        namespaceId:
+          $ref: '#/components/schemas/namespaceId'
+        rotationId:
+          $ref: '#/components/schemas/rotation'
+        parentRotationId:
           $ref: '#/components/schemas/rotation'
         state:
           $ref: '#/components/schemas/actionState'
@@ -227,9 +243,10 @@ components:
         closedAt:
           $ref: '#/components/schemas/date'
       required:
-        - id
-        - service
-        - rotation
+        - actionId
+        - serviceId
+        - namespaceId
+        - rotationId
         - state
         - status
         - createdAt

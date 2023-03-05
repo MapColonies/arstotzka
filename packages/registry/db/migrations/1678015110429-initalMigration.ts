@@ -1,12 +1,12 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class InitalMigration1677159302383 implements MigrationInterface {
-  public name = 'initalMigration1677159302383';
+export class InitalMigration1678015110429 implements MigrationInterface {
+  public name = 'InitalMigration1678015110429';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
             CREATE TABLE "registry"."namespace" (
-                "namespace_id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "namespace_id" SERIAL NOT NULL,
                 "name" character varying NOT NULL,
                 "created_at" TIMESTAMP NOT NULL DEFAULT now(),
                 "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
@@ -40,7 +40,7 @@ export class InitalMigration1677159302383 implements MigrationInterface {
     await queryRunner.query(`
             CREATE TABLE "registry"."service" (
                 "service_id" uuid NOT NULL DEFAULT uuid_generate_v4(),
-                "namespace_id" uuid NOT NULL,
+                "namespace_id" integer NOT NULL,
                 "name" character varying NOT NULL,
                 "parallelism" "registry"."service_parallelism_enum" NOT NULL,
                 "service_type" "registry"."service_service_type_enum" NOT NULL,

@@ -10,7 +10,7 @@ export enum ServiceType {
 }
 
 export interface INamespace {
-  namespaceId: string;
+  namespaceId: number;
 
   name: string;
 
@@ -22,7 +22,7 @@ export interface INamespace {
 export interface IService {
   serviceId: string;
 
-  namespaceId: string;
+  namespaceId: number;
 
   name: string;
 

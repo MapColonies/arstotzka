@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class InitialMigration1671032411845 implements MigrationInterface {
-  public name = 'InitialMigration1671032411845';
+export class InitalMigration1678019370196 implements MigrationInterface {
+  public name = 'InitalMigration1678019370196';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
@@ -10,9 +10,11 @@ export class InitialMigration1671032411845 implements MigrationInterface {
     await queryRunner.query(`
             CREATE TABLE "actiony"."action" (
                 "action_id" uuid NOT NULL DEFAULT uuid_generate_v4(),
-                "service" character varying NOT NULL,
+                "service_id" uuid NOT NULL,
                 "state" integer NOT NULL,
-                "rotation" character varying NOT NULL,
+                "namespace_id" integer NOT NULL,
+                "rotation_id" integer NOT NULL,
+                "parent_rotation_id" integer,
                 "action_status" "actiony"."action_action_status_enum" NOT NULL DEFAULT 'active',
                 "metadata" jsonb,
                 "closed_at" TIMESTAMP,
@@ -22,13 +24,19 @@ export class InitialMigration1671032411845 implements MigrationInterface {
             )
         `);
     await queryRunner.query(`
-            CREATE INDEX "IDX_ff9f017f7c5f757d8a89a027e1" ON "actiony"."action" ("service")
+            CREATE INDEX "IDX_0614f35b13efe4dc436c93a034" ON "actiony"."action" ("service_id")
+        `);
+    await queryRunner.query(`
+            CREATE INDEX "IDX_c983dca7bde6a51388e5f05d8d" ON "actiony"."action" ("namespace_id")
         `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
-            DROP INDEX "actiony"."IDX_ff9f017f7c5f757d8a89a027e1"
+            DROP INDEX "actiony"."IDX_c983dca7bde6a51388e5f05d8d"
+        `);
+    await queryRunner.query(`
+            DROP INDEX "actiony"."IDX_0614f35b13efe4dc436c93a034"
         `);
     await queryRunner.query(`
             DROP TABLE "actiony"."action"

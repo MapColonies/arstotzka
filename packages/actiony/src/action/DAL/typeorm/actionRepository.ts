@@ -13,11 +13,15 @@ const createActionRepository = (dataSource: DataSource) => {
 
       const options: FindOptionsWhere<ActionEntity> = {};
       if (filter.service !== undefined) {
-        options.service = filter.service;
+        options.serviceId = filter.service;
       }
 
       if (filter.rotation !== undefined) {
-        options.rotation = filter.rotation;
+        options.rotationId = filter.rotation;
+      }
+
+      if (filter.parentRotation !== undefined) {
+        options.parentRotationId = filter.parentRotation;
       }
 
       if (filter.status !== undefined) {
@@ -30,7 +34,10 @@ const createActionRepository = (dataSource: DataSource) => {
       const scopedManager = transactionManager ?? this.manager;
       return scopedManager.findOneBy(ActionEntity, { actionId });
     },
-    async createAction(params: ActionParams & { rotation: string }, transactionManager?: EntityManager): Promise<InsertResult> {
+    async createAction(
+      params: ActionParams & { rotationId: number; parentRotationId?: number },
+      transactionManager?: EntityManager
+    ): Promise<InsertResult> {
       const scopedManager = transactionManager ?? this.manager;
       return scopedManager.createQueryBuilder().insert().into(ActionEntity).values(params).returning([ACTION_IDENTIFIER_COLUMN]).execute();
     },
@@ -48,9 +55,12 @@ const createActionRepository = (dataSource: DataSource) => {
 
       await scopedManager.createQueryBuilder(ActionEntity, 'action').update(finalParams).where({ actionId }).execute();
     },
-    async updateLastAndCreate(updateParams: UpdatableActionParams, params: ActionParams & { rotation: string }): Promise<InsertResult> {
-      return this.manager.connection.transaction(async (entityManager) => {
-        const actions = await this.findActions({ service: params.service, status: [ActionStatus.ACTIVE], sort: 'desc', limit: 1 }, entityManager);
+    async updateLastAndCreate(
+      updateParams: UpdatableActionParams,
+      params: ActionParams & { rotationId: number; parentRotationId?: number }
+    ): Promise<InsertResult> {
+      return this.manager.connection.transaction(async (entityManager: EntityManager) => {
+        const actions = await this.findActions({ service: params.serviceId, status: [ActionStatus.ACTIVE], sort: 'desc', limit: 1 }, entityManager);
 
         if (actions.length !== 0) {
           const action = actions[0];

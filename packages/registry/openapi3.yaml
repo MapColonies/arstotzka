@@ -40,8 +40,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/serviceId'
       responses:
-        201:
-          description: bumped service rotation
+        204:
+          description: Service rotation bumped
         400:
           $ref: '#/components/responses/BadRequest'
         409:
@@ -93,8 +93,8 @@ components:
       type: string
       format: uuid
     namespaceId:
-      type: string
-      format: uuid
+      type: number
+      minimum: 1
     serviceName:
       type: string
     namespaceName:

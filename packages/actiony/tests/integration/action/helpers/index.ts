@@ -6,7 +6,7 @@ type HasProperty<K extends string, V> = {
   [P in K]: V;
 };
 
-type GeneratedActionParams = ActionParams & { rotation?: string; status?: ActionStatus };
+type GeneratedActionParams = ActionParams & { rotationId?: number; parentRotationId?: number; status?: ActionStatus };
 
 export type StringifiedAction = Omit<Action, 'createdAt' | 'updatedAt' | 'closedAt'> & {
   createdAt: string;
@@ -17,14 +17,16 @@ export type StringifiedAction = Omit<Action, 'createdAt' | 'updatedAt' | 'closed
 export const generateAction = (params: Partial<GeneratedActionParams> = {}): GeneratedActionParams => {
   return {
     ...generateActionParams(params),
-    rotation: params.rotation ?? faker.datatype.float().toString(),
+    rotationId: params.rotationId ?? faker.datatype.number(),
+    parentRotationId: params.parentRotationId ?? faker.datatype.number(),
     status: params.status ?? undefined,
   };
 };
 
 export const generateActionParams = (params: Partial<ActionParams> = {}): ActionParams => {
   return {
-    service: params.service ?? faker.datatype.string(),
+    serviceId: params.serviceId ?? faker.datatype.uuid(),
+    namespaceId: params.namespaceId ?? faker.datatype.number(),
     state: params.state ?? faker.datatype.number(),
     metadata: params.metadata ?? (JSON.parse(faker.datatype.json()) as Record<string, unknown>),
   };
@@ -53,7 +55,7 @@ export const sortByDate = <T extends HasProperty<K, Date | string>, K extends ke
 
 export const generateGetServiceResponse = (params: Partial<Service> = {}): Service => {
   return {
-    serviceId: params.serviceId ?? faker.datatype.string(),
+    serviceId: params.serviceId ?? faker.datatype.uuid(),
     parallelism: params.parallelism ?? Parallelism.SINGLE,
     serviceRotation: params.serviceRotation ?? faker.datatype.number(),
     parentRotation: params.parentRotation ?? faker.datatype.number(),

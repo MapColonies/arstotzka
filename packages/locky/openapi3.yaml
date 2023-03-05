@@ -27,7 +27,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/lockId'
+                $ref: '#/components/schemas/lockResponse'
         400:
           $ref: '#/components/responses/BadRequest'
         404:
@@ -72,7 +72,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/lockId'
+                $ref: '#/components/schemas/lockResponse'
         400:
           $ref: '#/components/responses/BadRequest'
         404:
@@ -146,3 +146,10 @@ components:
       required:
         - services
       additionalProperties: false
+    lockResponse:
+      type: object
+      properties:
+        lockId:
+          $ref: '#/components/schemas/lockId'
+      required:
+        - lockId

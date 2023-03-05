@@ -5,13 +5,16 @@ export interface UpdatableActionParams {
 }
 
 export interface ActionParams extends Omit<UpdatableActionParams, 'status'> {
-  service: string;
+  serviceId: string;
   state: number;
+  namespaceId: number;
 }
 
 export interface Action extends ActionParams {
+  namespaceId: number;
   actionId: string;
-  rotation: string;
+  rotationId: number;
+  parentRotationId?: number;
   status: ActionStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -29,7 +32,8 @@ export type Sort = 'asc' | 'desc';
 
 export interface ActionFilter {
   service?: string;
-  rotation?: string;
+  rotation?: number;
+  parentRotation?: number;
   status?: ActionStatus[];
   limit?: number;
   sort?: Sort;

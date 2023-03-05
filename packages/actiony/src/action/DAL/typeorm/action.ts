@@ -9,14 +9,21 @@ export class Action implements IAction {
   public actionId!: string;
 
   @Index()
-  @Column({ name: 'service' })
-  public service!: string;
+  @Column({ name: 'service_id', type: 'uuid' })
+  public serviceId!: string;
 
   @Column({ name: 'state', type: 'integer' })
   public state!: number;
 
-  @Column({ name: 'rotation' })
-  public rotation!: string;
+  @Index()
+  @Column({ name: 'namespace_id', type: 'integer' })
+  public namespaceId!: number;
+
+  @Column({ name: 'rotation_id', type: 'integer' })
+  public rotationId!: number;
+
+  @Column({ name: 'parent_rotation_id', type: 'integer', nullable: true })
+  public parentRotationId!: number;
 
   @Column({ name: 'action_status', type: 'enum', enum: ActionStatus, default: ActionStatus.ACTIVE })
   public status!: ActionStatus;

@@ -6,7 +6,7 @@ import { ActionRepository, ACTION_CLOSED_STATUSES, ACTION_REPOSITORY_SYMBOL } fr
 import { Action, ActionFilter, ActionParams, ActionStatus, Parallelism, UpdatableActionParams } from './action';
 import { ActionAlreadyClosedError, ActionNotFoundError, ParallelismMismatchError } from './errors';
 import { getServiceFromRegistryMock, Service } from './registryMock';
-import { parallelismToMaxActive, stringifyRotation } from './util';
+import { parallelismToMaxActive } from './util';
 
 @injectable()
 export class ActionManager {
@@ -22,7 +22,7 @@ export class ActionManager {
   }
 
   public async createAction(params: ActionParams): Promise<string> {
-    const serviceId = params.service;
+    const serviceId = params.serviceId;
 
     this.logger.info({ msg: 'fetching service from registry', serviceId });
 
@@ -38,7 +38,7 @@ export class ActionManager {
 
     let actionId: string;
 
-    const actionParams = { ...params, rotation: stringifyRotation(service.serviceRotation, service.parentRotation) };
+    const actionParams = { ...params, rotationId: service.serviceRotation, parentRotationId: service.parentRotation };
 
     if (service.parallelism === Parallelism.SINGLE || service.parallelism === Parallelism.MULTIPLE) {
       const creationResult = await this.actionRepository.createAction(actionParams);

@@ -8,8 +8,8 @@ export class Service implements IService {
   @PrimaryGeneratedColumn('uuid', { name: 'service_id' })
   public serviceId!: string;
 
-  @Column({ name: 'namespace_id', type: 'uuid' })
-  public namespaceId!: string;
+  @Column({ name: 'namespace_id', type: 'integer' })
+  public namespaceId!: number;
 
   @ManyToOne(() => Namespace, (namespace) => namespace.services)
   @JoinColumn({ name: 'namespace_id', referencedColumnName: 'namespaceId' })
