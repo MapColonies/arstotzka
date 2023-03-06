@@ -37,7 +37,7 @@ jobs:
           eslint_extensions: ts
 
   openapi-lint:
-    name: Run TS Project eslint
+    name: Run OpenAPI lint Check
     runs-on: ubuntu-latest
 
     strategy:
