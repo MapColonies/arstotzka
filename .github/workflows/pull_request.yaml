@@ -11,6 +11,7 @@ jobs:
     strategy:
       matrix:
         node: [16.x, 18.x]
+        package: [actiony, locky, registry]
 
     steps:
       - name: Check out TS Project Git repository
@@ -40,7 +41,7 @@ jobs:
         uses: nwestfall/openapi-action@v1.0.2
         with:
          github_token: ${{ secrets.GITHUB_TOKEN }}
-         file: ./openapi3.yaml
+         file: ./packages/${{ matrix.package }}/openapi3.yaml
 
   security:
     runs-on: ubuntu-latest

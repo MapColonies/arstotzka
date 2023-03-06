@@ -4,7 +4,7 @@
     "schema": "actiony",
     "username": "postgres",
     "password": "1234",
-    "database": "root",
+    "database": "postgres",
     "enableSslAuth": false
   }
 }

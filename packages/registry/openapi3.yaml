@@ -9,6 +9,7 @@ info:
 tags:
   - name: service
     description: a service in the vector ecosystem
+security: []
 paths:
   /service/{serviceId}:
     get:

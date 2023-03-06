@@ -9,6 +9,7 @@ info:
 tags:
   - name: lock
     description: a lock on service(s)
+security: []
 paths:
   /lock:
     post:

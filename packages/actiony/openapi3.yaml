@@ -9,6 +9,7 @@ info:
 tags:
   - name: action
     description: an action in the ecosystem
+security: []
 paths:
   /action:
     get:
