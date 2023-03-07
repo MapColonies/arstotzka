@@ -18,7 +18,7 @@ export class ServerBuilder {
   public constructor(
     @inject(SERVICES.CONFIG) private readonly config: IConfig,
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
-    @inject(SERVICE_ROUTER_SYMBOL) private readonly actionRouter: Router
+    @inject(SERVICE_ROUTER_SYMBOL) private readonly serviceRouter: Router
   ) {
     this.serverInstance = express();
   }
@@ -38,7 +38,7 @@ export class ServerBuilder {
   }
 
   private buildRoutes(): void {
-    this.serverInstance.use('/action', this.actionRouter);
+    this.serverInstance.use('/service', this.serviceRouter);
     this.buildDocsRoutes();
   }
 

@@ -1,24 +1,28 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn, Unique, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { IRotation } from '../../models/service';
 import { Service } from './service';
 
 @Entity()
-@Index(['serviceId', 'parentRotationId', 'rotationId'], { unique: true })
+@Index(['serviceId', 'parentRotation', 'serviceRotation'], { unique: true, where: '"parent_rotation" IS NOT NULL' })
+@Index(['serviceId', 'serviceRotation'], { unique: true, where: '"parent_rotation" IS NULL' })
 export class Rotation implements IRotation {
-  @PrimaryColumn({ name: 'service_id', type: 'uuid' })
+  @PrimaryGeneratedColumn('uuid', { name: 'rotation_id' })
+  public rotationId!: string;
+
+  @Column({ name: 'service_id', type: 'uuid' })
   public serviceId!: string;
 
   @ManyToOne(() => Service, (service) => service.serviceId)
   @JoinColumn({ name: 'service_id' })
   public service!: Service;
 
-  @Column({ name: 'rotation_id', type: 'integer' })
-  public rotationId!: number;
+  @Column({ name: 'service_rotation', type: 'integer' })
+  public serviceRotation!: number;
 
-  @Column({ name: 'parent_rotation_id', type: 'integer', nullable: true })
-  public parentRotationId!: number;
+  @Column({ name: 'parent_rotation', type: 'integer', nullable: true })
+  public parentRotation!: number;
 
-  @Column({ name: 'description' })
+  @Column({ name: 'description', nullable: true })
   public description!: string;
 
   @CreateDateColumn({ name: 'created_at' })

@@ -1,24 +1,45 @@
 import { Logger } from '@map-colonies/js-logger';
 import { RequestHandler } from 'express';
-import httpStatus from 'http-status-codes';
+import httpStatus, { StatusCodes } from 'http-status-codes';
 import { injectable, inject } from 'tsyringe';
+import { HttpError } from '../../common/errors';
 import { SERVICES } from '../../common/constants';
+import { ServiceManager } from '../models/serviceManager';
+import { ServiceAlreadyLockedError, ServiceIsActiveError, ServiceNotFoundError } from '../models/errors';
+import { FlattedDetailedService } from '../models/service';
 
-import { IResourceNameModel, ServiceManager } from '../models/serviceManager';
-
-type CreateResourceHandler = RequestHandler<undefined, IResourceNameModel, IResourceNameModel>;
-type GetResourceHandler = RequestHandler<undefined, IResourceNameModel>;
+type GetServiceHandler = RequestHandler<{ serviceId: string }, FlattedDetailedService>;
+type RotateServiceHandler = RequestHandler<{ serviceId: string }>;
 
 @injectable()
 export class ServiceController {
   public constructor(@inject(SERVICES.LOGGER) private readonly logger: Logger, @inject(ServiceManager) private readonly manager: ServiceManager) {}
 
-  public getResource: GetResourceHandler = (req, res) => {
-    return res.status(httpStatus.OK).json(this.manager.getResource());
+  public getService: GetServiceHandler = async (req, res, next) => {
+    try {
+      const detailedService = await this.manager.detail(req.params.serviceId);
+      return res.status(httpStatus.OK).json(detailedService);
+    } catch (error) {
+      if (error instanceof ServiceNotFoundError) {
+        (error as HttpError).status = StatusCodes.NOT_FOUND;
+      }
+      return next(error);
+    }
   };
 
-  public createResource: CreateResourceHandler = (req, res) => {
-    const createdResource = this.manager.createResource(req.body);
-    return res.status(httpStatus.CREATED).json(createdResource);
+  public rotateService: RotateServiceHandler = async (req, res, next) => {
+    try {
+      await this.manager.rotate(req.params.serviceId);
+      return res.status(httpStatus.NO_CONTENT).json();
+    } catch (error) {
+      if (error instanceof ServiceNotFoundError) {
+        (error as HttpError).status = StatusCodes.NOT_FOUND;
+      }
+      // TODO: conflicting errors such as locked, etc.
+      if (error instanceof ServiceAlreadyLockedError || error instanceof ServiceIsActiveError || error instanceof ServiceNotFoundError) {
+        (error as HttpError).status = StatusCodes.CONFLICT;
+      }
+      return next(error);
+    }
   };
 }

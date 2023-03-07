@@ -19,7 +19,7 @@ export class Service implements IService {
   public name!: string;
 
   @Column({ name: 'parallelism', type: 'enum', enum: Parallelism })
-  public parallalism!: Parallelism;
+  public parallelism!: Parallelism;
 
   @Column({ name: 'service_type', type: 'enum', enum: ServiceType })
   public serviceType!: ServiceType;
@@ -35,6 +35,7 @@ export class Service implements IService {
   public children!: Service[];
 
   @OneToMany(() => Rotation, (rotation) => rotation.service)
+  @JoinColumn({ referencedColumnName: 'serviceId' })
   public rotations!: Rotation[];
 
   @CreateDateColumn({ name: 'created_at' })

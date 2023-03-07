@@ -132,7 +132,7 @@ components:
           $ref: '#/components/schemas/serviceType'
         parentRotation:
           $ref: '#/components/schemas/rotation'
-        rotation:
+        serviceRotation:
           $ref: '#/components/schemas/rotation'
         parallelism:
           $ref: '#/components/schemas/parallelism'
@@ -153,6 +153,6 @@ components:
         - namespaceName
         - parallelism
         - serviceType
-        - rotation
+        - serviceRotation
         - createdAt
         - updatedAt

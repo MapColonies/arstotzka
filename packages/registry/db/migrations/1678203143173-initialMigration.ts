@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class InitalMigration1678015110429 implements MigrationInterface {
-  public name = 'InitalMigration1678015110429';
+export class InitialMigration1678203143173 implements MigrationInterface {
+  public name = 'InitialMigration1678203143173';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
@@ -15,21 +15,27 @@ export class InitalMigration1678015110429 implements MigrationInterface {
         `);
     await queryRunner.query(`
             CREATE TABLE "registry"."rotation" (
+                "rotation_id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "service_id" uuid NOT NULL,
-                "rotation_id" integer NOT NULL,
-                "parent_rotation_id" integer,
-                "description" character varying NOT NULL,
+                "service_rotation" integer NOT NULL,
+                "parent_rotation" integer,
+                "description" character varying,
                 "created_at" TIMESTAMP NOT NULL DEFAULT now(),
                 "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
-                CONSTRAINT "PK_01ce81db50e037e87a45eea22b8" PRIMARY KEY ("service_id")
+                CONSTRAINT "PK_64a205f46005940192c1da3cb23" PRIMARY KEY ("rotation_id")
             )
         `);
     await queryRunner.query(`
-            CREATE UNIQUE INDEX "IDX_c79dd9b127fe6b1a6b3a634027" ON "registry"."rotation" (
+            CREATE UNIQUE INDEX "IDX_c789d5eb7a282567f625e64930" ON "registry"."rotation" ("service_id", "service_rotation")
+            WHERE "parent_rotation" IS NULL
+        `);
+    await queryRunner.query(`
+            CREATE UNIQUE INDEX "IDX_1724ad396cc756824771ffcea8" ON "registry"."rotation" (
                 "service_id",
-                "parent_rotation_id",
-                "rotation_id"
+                "parent_rotation",
+                "service_rotation"
             )
+            WHERE "parent_rotation" IS NOT NULL
         `);
     await queryRunner.query(`
             CREATE TYPE "registry"."service_parallelism_enum" AS ENUM('single', 'replaceable', 'multiple')
@@ -84,7 +90,10 @@ export class InitalMigration1678015110429 implements MigrationInterface {
             DROP TYPE "registry"."service_parallelism_enum"
         `);
     await queryRunner.query(`
-            DROP INDEX "registry"."IDX_c79dd9b127fe6b1a6b3a634027"
+            DROP INDEX "registry"."IDX_1724ad396cc756824771ffcea8"
+        `);
+    await queryRunner.query(`
+            DROP INDEX "registry"."IDX_c789d5eb7a282567f625e64930"
         `);
     await queryRunner.query(`
             DROP TABLE "registry"."rotation"
