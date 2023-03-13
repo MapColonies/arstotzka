@@ -35,7 +35,6 @@ export class ServiceController {
       if (error instanceof ServiceNotFoundError) {
         (error as HttpError).status = StatusCodes.NOT_FOUND;
       }
-      // TODO: conflicting errors such as locked, etc.
       if (error instanceof ServiceAlreadyLockedError || error instanceof ServiceIsActiveError || error instanceof ServiceNotFoundError) {
         (error as HttpError).status = StatusCodes.CONFLICT;
       }

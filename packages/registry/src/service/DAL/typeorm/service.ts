@@ -1,12 +1,25 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  Tree,
+  TreeChildren,
+  TreeParent,
+  UpdateDateColumn,
+} from 'typeorm';
 import { IService, Parallelism, ServiceType } from '../../models/service';
 import { Namespace } from './namespace';
 import { Rotation } from './rotation';
 
 @Entity()
+@Tree('closure-table')
 export class Service implements IService {
-  @PrimaryGeneratedColumn('uuid', { name: 'service_id' })
-  public serviceId!: string;
+  @PrimaryGeneratedColumn('uuid', { name: 'id' })
+  public id!: string;
 
   @Column({ name: 'namespace_id', type: 'integer' })
   public namespaceId!: number;
@@ -27,15 +40,17 @@ export class Service implements IService {
   @Column({ name: 'parent_service_id', type: 'uuid', nullable: true })
   public parentServiceId!: string | null;
 
-  @ManyToOne(() => Service, (service) => service.serviceId)
+  @ManyToOne(() => Service, (service) => service.children)
   @JoinColumn({ name: 'parent_service_id' })
-  public parent?: Service;
+  @TreeParent()
+  public parent?: Service | null;
 
   @OneToMany(() => Service, (service) => service.parent)
+  @TreeChildren()
   public children!: Service[];
 
   @OneToMany(() => Rotation, (rotation) => rotation.service)
-  @JoinColumn({ referencedColumnName: 'serviceId' })
+  @JoinColumn({ referencedColumnName: 'id' })
   public rotations!: Rotation[];
 
   @CreateDateColumn({ name: 'created_at' })

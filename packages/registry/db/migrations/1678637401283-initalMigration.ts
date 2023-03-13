@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class InitialMigration1678203143173 implements MigrationInterface {
-  public name = 'InitialMigration1678203143173';
+export class InitalMigration1678637401283 implements MigrationInterface {
+  public name = 'initalMigration1678637401283';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
@@ -45,7 +45,7 @@ export class InitialMigration1678203143173 implements MigrationInterface {
         `);
     await queryRunner.query(`
             CREATE TABLE "registry"."service" (
-                "service_id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "namespace_id" integer NOT NULL,
                 "name" character varying NOT NULL,
                 "parallelism" "registry"."service_parallelism_enum" NOT NULL,
@@ -53,12 +53,25 @@ export class InitialMigration1678203143173 implements MigrationInterface {
                 "parent_service_id" uuid,
                 "created_at" TIMESTAMP NOT NULL DEFAULT now(),
                 "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
-                CONSTRAINT "PK_48c5a0e13da2b2948fb7f3a0c4a" PRIMARY KEY ("service_id")
+                CONSTRAINT "PK_85a21558c006647cd76fdce044b" PRIMARY KEY ("id")
             )
         `);
     await queryRunner.query(`
+            CREATE TABLE "registry"."service_closure" (
+                "id_ancestor" uuid NOT NULL,
+                "id_descendant" uuid NOT NULL,
+                CONSTRAINT "PK_8bd17ea3baf7e6246526b115e12" PRIMARY KEY ("id_ancestor", "id_descendant")
+            )
+        `);
+    await queryRunner.query(`
+            CREATE INDEX "IDX_4cf4c5689024ba40911061803f" ON "registry"."service_closure" ("id_ancestor")
+        `);
+    await queryRunner.query(`
+            CREATE INDEX "IDX_db8ce8417c184a1e246cccdf59" ON "registry"."service_closure" ("id_descendant")
+        `);
+    await queryRunner.query(`
             ALTER TABLE "registry"."rotation"
-            ADD CONSTRAINT "FK_01ce81db50e037e87a45eea22b8" FOREIGN KEY ("service_id") REFERENCES "registry"."service"("service_id") ON DELETE NO ACTION ON UPDATE NO ACTION
+            ADD CONSTRAINT "FK_01ce81db50e037e87a45eea22b8" FOREIGN KEY ("service_id") REFERENCES "registry"."service"("id") ON DELETE NO ACTION ON UPDATE NO ACTION
         `);
     await queryRunner.query(`
             ALTER TABLE "registry"."service"
@@ -66,11 +79,25 @@ export class InitialMigration1678203143173 implements MigrationInterface {
         `);
     await queryRunner.query(`
             ALTER TABLE "registry"."service"
-            ADD CONSTRAINT "FK_29b7e65d6a987c0c8bdfe995ca1" FOREIGN KEY ("parent_service_id") REFERENCES "registry"."service"("service_id") ON DELETE NO ACTION ON UPDATE NO ACTION
+            ADD CONSTRAINT "FK_29b7e65d6a987c0c8bdfe995ca1" FOREIGN KEY ("parent_service_id") REFERENCES "registry"."service"("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+        `);
+    await queryRunner.query(`
+            ALTER TABLE "registry"."service_closure"
+            ADD CONSTRAINT "FK_4cf4c5689024ba40911061803fa" FOREIGN KEY ("id_ancestor") REFERENCES "registry"."service"("id") ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+    await queryRunner.query(`
+            ALTER TABLE "registry"."service_closure"
+            ADD CONSTRAINT "FK_db8ce8417c184a1e246cccdf592" FOREIGN KEY ("id_descendant") REFERENCES "registry"."service"("id") ON DELETE CASCADE ON UPDATE NO ACTION
         `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
+            ALTER TABLE "registry"."service_closure" DROP CONSTRAINT "FK_db8ce8417c184a1e246cccdf592"
+        `);
+    await queryRunner.query(`
+            ALTER TABLE "registry"."service_closure" DROP CONSTRAINT "FK_4cf4c5689024ba40911061803fa"
+        `);
     await queryRunner.query(`
             ALTER TABLE "registry"."service" DROP CONSTRAINT "FK_29b7e65d6a987c0c8bdfe995ca1"
         `);
@@ -79,6 +106,15 @@ export class InitialMigration1678203143173 implements MigrationInterface {
         `);
     await queryRunner.query(`
             ALTER TABLE "registry"."rotation" DROP CONSTRAINT "FK_01ce81db50e037e87a45eea22b8"
+        `);
+    await queryRunner.query(`
+            DROP INDEX "registry"."IDX_db8ce8417c184a1e246cccdf59"
+        `);
+    await queryRunner.query(`
+            DROP INDEX "registry"."IDX_4cf4c5689024ba40911061803f"
+        `);
+    await queryRunner.query(`
+            DROP TABLE "registry"."service_closure"
         `);
     await queryRunner.query(`
             DROP TABLE "registry"."service"

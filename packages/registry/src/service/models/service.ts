@@ -20,7 +20,7 @@ export interface INamespace extends IDbEntity {
 }
 
 export interface IService extends IDbEntity {
-  serviceId: string;
+  id: string;
   namespaceId: number;
   name: string;
   parallelism: Parallelism;

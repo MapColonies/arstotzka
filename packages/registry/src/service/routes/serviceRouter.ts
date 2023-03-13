@@ -9,7 +9,7 @@ export const serviceRouterFactory: FactoryFunction<Router> = (dependencyContaine
   const controller = dependencyContainer.resolve(ServiceController);
 
   router.get('/:serviceId', controller.getService);
-  router.patch('/:serviceId/rotate', controller.rotateService);
+  router.post('/:serviceId/rotate', controller.rotateService);
 
   return router;
 };

@@ -33,8 +33,8 @@ paths:
         5XX:
           $ref: '#/components/responses/UnexpectedError'
   /service/{serviceId}/rotate:
-    patch:
-      operationId: patchRotation
+    post:
+      operationId: postRotation
       tags:
         - service
       summary: bump rotation for a service and its children

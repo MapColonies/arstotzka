@@ -2,6 +2,8 @@ import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, Primary
 import { IRotation } from '../../models/service';
 import { Service } from './service';
 
+export const ROTATION_IDENTIFIER_COLUMN = 'rotationId';
+
 @Entity()
 @Index(['serviceId', 'parentRotation', 'serviceRotation'], { unique: true, where: '"parent_rotation" IS NOT NULL' })
 @Index(['serviceId', 'serviceRotation'], { unique: true, where: '"parent_rotation" IS NULL' })
@@ -12,7 +14,7 @@ export class Rotation implements IRotation {
   @Column({ name: 'service_id', type: 'uuid' })
   public serviceId!: string;
 
-  @ManyToOne(() => Service, (service) => service.serviceId)
+  @ManyToOne(() => Service, (service) => service.id)
   @JoinColumn({ name: 'service_id' })
   public service!: Service;
 
