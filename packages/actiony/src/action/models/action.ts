@@ -1,7 +1,7 @@
 export interface UpdatableActionParams {
   status?: ActionStatus;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- typeorm's QueryDeepPartialEntity does not recognize unknown types
-  metadata?: Record<string, any>;
+  metadata?: Record<string, any> | null;
 }
 
 export interface ActionParams extends Omit<UpdatableActionParams, 'status'> {
@@ -14,11 +14,11 @@ export interface Action extends ActionParams {
   namespaceId: number;
   actionId: string;
   rotationId: number;
-  parentRotationId?: number;
+  parentRotationId: number | null;
   status: ActionStatus;
   createdAt: Date;
   updatedAt: Date;
-  closedAt?: Date;
+  closedAt: Date | null;
 }
 
 export enum ActionStatus {

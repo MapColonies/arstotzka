@@ -23,16 +23,16 @@ export class Action implements IAction {
   public rotationId!: number;
 
   @Column({ name: 'parent_rotation_id', type: 'integer', nullable: true })
-  public parentRotationId!: number;
+  public parentRotationId!: number | null;
 
   @Column({ name: 'action_status', type: 'enum', enum: ActionStatus, default: ActionStatus.ACTIVE })
   public status!: ActionStatus;
 
   @Column({ name: 'metadata', type: 'jsonb', nullable: true })
-  public metadata!: Record<string, unknown>;
+  public metadata!: Record<string, unknown> | null;
 
   @Column({ name: 'closed_at', type: 'timestamp', nullable: true })
-  public closedAt!: Date;
+  public closedAt!: Date | null;
 
   @CreateDateColumn({ name: 'created_at' })
   public createdAt!: Date;
