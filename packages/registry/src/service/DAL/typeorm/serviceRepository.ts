@@ -1,12 +1,12 @@
 import { FactoryFunction } from 'tsyringe';
 import { DataSource, InsertResult } from 'typeorm';
 import { DATA_SOURCE_PROVIDER } from '../../../common/db';
-import { Rotation, ROTATION_IDENTIFIER_COLUMN } from './rotation';
+import { Rotation as RotationEntity, ROTATION_IDENTIFIER_COLUMN } from './rotation';
 import { Service as ServiceEntity } from './service';
 
 interface RotationInsertValues {
   serviceId: string;
-  parentRotation?: number;
+  parentRotation: number | null;
   serviceRotation: number;
 }
 
@@ -58,16 +58,16 @@ const createServiceRepository = (dataSource: DataSource) => {
         const currentRotation = service.rotations[0];
         return {
           serviceId: service.id,
-          parentRotation: currentRotation.serviceId === id ? currentRotation.parentRotation : +currentRotation.parentRotation + 1,
+          parentRotation: currentRotation.serviceId === id ? currentRotation.parentRotation : +(currentRotation.parentRotation as number) + 1,
           serviceRotation: +currentRotation.serviceRotation + 1,
         };
       });
 
       // save the new rotations
       return this.manager
-        .createQueryBuilder(Rotation, 'rotation')
+        .createQueryBuilder(RotationEntity, 'rotation')
         .insert()
-        .into(Rotation)
+        .into(RotationEntity)
         .values(newRotations)
         .returning([ROTATION_IDENTIFIER_COLUMN, 'serviceId', 'parentRotation', 'serviceRotation'])
         .execute();

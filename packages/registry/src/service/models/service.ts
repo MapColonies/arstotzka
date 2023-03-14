@@ -32,8 +32,8 @@ export interface IRotation extends IDbEntity {
   rotationId: string;
   serviceId: string;
   serviceRotation: number;
-  parentRotation?: number;
-  description?: string;
+  parentRotation: number | null;
+  description: string | null;
 }
 
 export interface DetailedService extends IService {
@@ -50,7 +50,7 @@ export interface FlattedDetailedService {
   serviceRotation: number;
   parallelism: Parallelism;
   parent: string | null;
-  parentRotation?: number;
+  parentRotation: number | null;
   children: string[];
   createdAt: Date;
   updatedAt: Date;

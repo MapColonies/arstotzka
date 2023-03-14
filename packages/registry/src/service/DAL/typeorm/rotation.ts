@@ -2,6 +2,8 @@ import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, Primary
 import { IRotation } from '../../models/service';
 import { Service } from './service';
 
+const DESCRIPTION_LENGTH_LIMIT = 255;
+
 export const ROTATION_IDENTIFIER_COLUMN = 'rotationId';
 
 @Entity()
@@ -22,10 +24,10 @@ export class Rotation implements IRotation {
   public serviceRotation!: number;
 
   @Column({ name: 'parent_rotation', type: 'integer', nullable: true })
-  public parentRotation!: number;
+  public parentRotation!: number | null;
 
-  @Column({ name: 'description', nullable: true })
-  public description!: string;
+  @Column({ name: 'description', type: 'character varying', length: DESCRIPTION_LENGTH_LIMIT, nullable: true })
+  public description!: string | null;
 
   @CreateDateColumn({ name: 'created_at' })
   public createdAt!: Date;
