@@ -31,8 +31,6 @@ paths:
                 $ref: '#/components/schemas/lockResponse'
         400:
           $ref: '#/components/responses/BadRequest'
-        404:
-          $ref: '#/components/responses/NotFound'
         409:
           $ref: '#/components/responses/Conflict'
         5XX:
@@ -62,7 +60,7 @@ paths:
       summary: create a lock on the services who are blocked by provided service
       parameters:
         - in: query
-          name: serviceId
+          name: service
           description: >-
             the service id who's reserving access
           schema:
@@ -140,6 +138,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/serviceId'
+          minItems: 1
+          uniqueItems: true
         reason:
           type: string
         expiration:

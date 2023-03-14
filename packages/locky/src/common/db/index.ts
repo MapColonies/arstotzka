@@ -5,7 +5,7 @@ import { DependencyContainer, FactoryFunction } from 'tsyringe';
 import { DbConfig, IConfig } from '../interfaces';
 import { promiseTimeout } from '../util';
 import { SERVICES } from '../constants';
-import { Lock } from '../../service/DAL/typeorm/lock';
+import { Lock } from '../../lock/DAL/typeorm/lock';
 
 let connectionSingleton: DataSource | undefined;
 

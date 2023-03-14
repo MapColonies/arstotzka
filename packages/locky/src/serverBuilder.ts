@@ -9,7 +9,7 @@ import { Logger } from '@map-colonies/js-logger';
 import httpLogger from '@map-colonies/express-access-log-middleware';
 import { SERVICES } from './common/constants';
 import { IConfig } from './common/interfaces';
-import { LOCK_ROUTER_SYMBOL } from './service/routes/lockRouter';
+import { LOCK_ROUTER_SYMBOL } from './lock/routes/lockRouter';
 
 @injectable()
 export class ServerBuilder {
@@ -38,7 +38,7 @@ export class ServerBuilder {
   }
 
   private buildRoutes(): void {
-    this.serverInstance.use('/action', this.lockRouter);
+    this.serverInstance.use('/lock', this.lockRouter);
     this.buildDocsRoutes();
   }
 

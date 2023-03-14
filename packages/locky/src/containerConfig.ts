@@ -10,8 +10,8 @@ import { dataSourceFactory, DATA_SOURCE_PROVIDER, getDbHealthCheckFunction } fro
 import { tracing } from './common/tracing';
 import { HEALTHCHECK, ON_SIGNAL, SERVICES, SERVICE_NAME } from './common/constants';
 import { InjectionObject, registerDependencies } from './common/dependencyRegistration';
-import { lockRepositoryFactory, LOCK_REPOSITORY_SYMBOL } from './service/DAL/typeorm/lockRepository';
-import { lockRouterFactory, LOCK_ROUTER_SYMBOL } from './service/routes/lockRouter';
+import { lockRepositoryFactory, LOCK_REPOSITORY_SYMBOL } from './lock/DAL/typeorm/lockRepository';
+import { lockRouterFactory, LOCK_ROUTER_SYMBOL } from './lock/routes/lockRouter';
 
 export interface RegisterOptions {
   override?: InjectionObject<unknown>[];
