@@ -8,6 +8,7 @@ import { Service } from '../../service/DAL/typeorm/service';
 import { Namespace } from '../../service/DAL/typeorm/namespace';
 import { SERVICES } from '../constants';
 import { Rotation } from '../../service/DAL/typeorm/rotation';
+import { Block } from '../../service/DAL/typeorm/block';
 
 let connectionSingleton: DataSource | undefined;
 
@@ -15,7 +16,7 @@ const DB_TIMEOUT = 5000;
 
 export const DATA_SOURCE_PROVIDER = Symbol('dataSourceProvider');
 
-export const DB_ENTITIES = [Namespace, Service, Rotation];
+export const DB_ENTITIES = [Namespace, Service, Rotation, Block];
 
 export const createDataSourceOptions = (dbConfig: DbConfig): DataSourceOptions => {
   const { enableSslAuth, sslPaths, ...connectionOptions } = dbConfig;

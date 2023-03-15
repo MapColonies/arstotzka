@@ -36,9 +36,15 @@ export interface IRotation extends IDbEntity {
   description: string | null;
 }
 
+export interface IBlock {
+  blockerId: string;
+  blockeeId: string;
+}
+
 export interface DetailedService extends IService {
-  namespace: INamespace;
-  rotations: IRotation[];
+  namespace?: INamespace;
+  rotations?: IRotation[];
+  blocks?: IBlock[];
 }
 
 export interface FlattedDetailedService {
@@ -52,6 +58,7 @@ export interface FlattedDetailedService {
   parent: string | null;
   parentRotation: number | null;
   children: string[];
+  blockees: string[];
   createdAt: Date;
   updatedAt: Date;
 }

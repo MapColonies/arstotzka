@@ -142,6 +142,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/serviceId'
+        blockees:
+          type: array
+          items:
+            $ref: '#/components/schemas/serviceId'
         createdAt:
           $ref: '#/components/schemas/date'
         updatedAt:

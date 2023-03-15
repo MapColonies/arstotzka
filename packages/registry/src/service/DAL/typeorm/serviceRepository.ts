@@ -3,6 +3,7 @@ import { DataSource, InsertResult } from 'typeorm';
 import { DATA_SOURCE_PROVIDER } from '../../../common/db';
 import { Rotation as RotationEntity, ROTATION_IDENTIFIER_COLUMN } from './rotation';
 import { Service as ServiceEntity } from './service';
+import { Block as BlockEntity } from './block';
 
 interface RotationInsertValues {
   serviceId: string;
@@ -43,6 +44,9 @@ const createServiceRepository = (dataSource: DataSource) => {
         return treeRepository.findDescendantsTree(service, { depth, relations: [] });
       }
       return treeRepository.findDescendants(service, { depth, relations: [] });
+    },
+    async findBlocks(id: string): Promise<BlockEntity[]> {
+      return this.manager.createQueryBuilder(BlockEntity, 'block').where('block.blocker_id = :id', { id }).getMany();
     },
     async createServiceRotation(id: string): Promise<InsertResult> {
       const service = (await this.findOneBy({ id })) as ServiceEntity;

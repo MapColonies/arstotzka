@@ -14,6 +14,7 @@ import {
 import { IService, Parallelism, ServiceType } from '../../models/service';
 import { Namespace } from './namespace';
 import { Rotation } from './rotation';
+import { Block } from './block';
 
 @Entity()
 @Tree('closure-table')
@@ -52,6 +53,10 @@ export class Service implements IService {
   @OneToMany(() => Rotation, (rotation) => rotation.service)
   @JoinColumn({ referencedColumnName: 'id' })
   public rotations!: Rotation[];
+
+  @OneToMany(() => Block, (block) => block.blockerService)
+  @JoinColumn({ referencedColumnName: 'id' })
+  public blocks!: Block[];
 
   @CreateDateColumn({ name: 'created_at' })
   public createdAt!: Date;

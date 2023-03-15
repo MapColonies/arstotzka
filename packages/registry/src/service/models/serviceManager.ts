@@ -8,10 +8,23 @@ import { ServiceIsActiveError, ServiceNotFoundError } from './errors';
 import { lockServicesMock, unlockServicesMock } from './lockyMock';
 import { DetailedService, FlattedDetailedService } from './service';
 
-const flattenDetailedService = (service: DetailedService, children: string[]): FlattedDetailedService => {
-  const { namespace, name: serviceName, serviceType, id: serviceId, parallelism, parentServiceId: parent, rotations, createdAt, updatedAt } = service;
+const flattenDetailedService = (service: Required<DetailedService>, children: string[]): FlattedDetailedService => {
+  const {
+    namespace,
+    name: serviceName,
+    serviceType,
+    id: serviceId,
+    parallelism,
+    parentServiceId: parent,
+    rotations,
+    blocks,
+    createdAt,
+    updatedAt,
+  } = service;
   const { namespaceId, name: namespaceName } = namespace;
   const { serviceRotation, parentRotation } = rotations[0];
+
+  const blockees = blocks.map((block) => block.blockeeId);
 
   return {
     namespaceId,
@@ -24,6 +37,7 @@ const flattenDetailedService = (service: DetailedService, children: string[]): F
     parent,
     parentRotation,
     children,
+    blockees,
     createdAt,
     updatedAt,
   };
@@ -39,7 +53,6 @@ export class ServiceManager {
   public async detail(serviceId: string): Promise<FlattedDetailedService> {
     this.logger.info({ msg: 'detailing service', serviceId });
 
-    // await this.serviceRepository.seed();
     const service = await this.serviceRepository.findDetailedServiceById(serviceId);
 
     if (service === null) {
@@ -48,6 +61,8 @@ export class ServiceManager {
     }
 
     const descendantTree = (await this.serviceRepository.findDescendants(service, true, 1)) as Service;
+
+    service.blocks = await this.serviceRepository.findBlocks(service.id);
 
     return flattenDetailedService(
       service,
