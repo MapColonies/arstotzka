@@ -1,25 +1,26 @@
 import { FactoryFunction } from 'tsyringe';
 import { ArrayOverlap, DataSource, DeleteResult, InsertResult, IsNull, Raw } from 'typeorm';
 import { DATA_SOURCE_PROVIDER } from '../../../common/db';
+import { LockId } from '../../models/lock';
 import { LockRequest } from '../../models/lockManager';
 import { Lock as LockEntity, LOCK_IDENTIFIER_COLUMN } from './lock';
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const createLockRepository = (dataSource: DataSource) => {
   return dataSource.getRepository(LockEntity).extend({
-    async findNonexpiredLocks(services: string[]): Promise<{ [LOCK_IDENTIFIER_COLUMN]: string }[]> {
+    async findNonexpiredLocks(services: string[]): Promise<LockId[]> {
       return this.manager.find(LockEntity, {
         select: [LOCK_IDENTIFIER_COLUMN],
         where: [
           { serviceIds: ArrayOverlap(services), expiresAt: IsNull() },
-          { serviceIds: ArrayOverlap(services), expiresAt: Raw((expiration) => `${expiration} > NOW()`) },
+          { serviceIds: ArrayOverlap(services), expiresAt: Raw((expiration) => `${expiration} > LOCALTIMESTAMP`) },
         ],
       });
     },
     async createLock(lockRequest: LockRequest): Promise<InsertResult> {
       const { services, expiration, reason } = lockRequest;
 
-      const expiresAt = expiration !== undefined ? (): string => `NOW() + INTERVAL '${expiration} milliseconds'` : null;
+      const expiresAt = expiration !== undefined ? (): string => `LOCALTIMESTAMP + INTERVAL '${expiration} milliseconds'` : null;
 
       return this.manager
         .createQueryBuilder(LockEntity, 'lock')

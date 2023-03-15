@@ -3,8 +3,12 @@ import { inject, injectable } from 'tsyringe';
 import { SERVICES } from '../../common/constants';
 import { LOCK_IDENTIFIER_COLUMN } from '../DAL/typeorm/lock';
 import { LockRepository, LOCK_REPOSITORY_SYMBOL } from '../DAL/typeorm/lockRepository';
-import { LockNotFoundError, ServiceAlreadyLockedError } from './errors';
+import { getActiveActionsMock } from './actionyMock';
+import { ActiveBlockingActionsError, LockNotFoundError, ServiceAlreadyLockedError } from './errors';
 import { LockId } from './lock';
+import { getServiceFromRegistryMock } from './registryMock';
+
+const SERVICE_RESERVATION_LOCK_EXPIRATION = 60000;
 
 export interface LockRequest {
   services: string[];
@@ -29,9 +33,9 @@ export class LockManager {
       throw new ServiceAlreadyLockedError('could not lock at least one of requested services');
     }
 
-    const insertId = await this.lockRepository.createLock(lockRequest);
+    const insertResult = await this.lockRepository.createLock(lockRequest);
 
-    const lockId = insertId.generatedMaps[0][LOCK_IDENTIFIER_COLUMN] as string;
+    const lockId = insertResult.generatedMaps[0][LOCK_IDENTIFIER_COLUMN] as string;
 
     this.logger.info({ msg: 'created lock on services', lockRequest, lockId });
 
@@ -56,8 +60,40 @@ export class LockManager {
   public async reserve(serviceId: string): Promise<LockId> {
     this.logger.info({ msg: 'attempting to reserve access for service', serviceId });
 
-    await this.lockRepository.findOneBy({ lockId: serviceId });
+    // validate the service isn't locked
+    const nonexpiredLocks = await this.lockRepository.findNonexpiredLocks([serviceId]);
+    if (nonexpiredLocks.length > 0) {
+      this.logger.error({ msg: 'found nonexpired locks on service', serviceId, nonexpiredLocks });
+      throw new ServiceAlreadyLockedError('could not reserve access for service due to nonexpired locks');
+    }
 
-    return { lockId: 'lockId' };
+    // get the service from the registry ,this validates the service really exists and gets its blockees
+    const service = await getServiceFromRegistryMock(serviceId);
+
+    // lock blocked by services
+    const insertResult = await this.lockRepository.createLock({
+      services: service.blockees,
+      expiration: SERVICE_RESERVATION_LOCK_EXPIRATION,
+      reason: `${serviceId} access reserve`,
+    });
+
+    const lockId = insertResult.generatedMaps[0][LOCK_IDENTIFIER_COLUMN] as string;
+
+    try {
+      // for each of the blocking services get the active actions and expect none
+      service.blockees.map(async (blockeeId) => {
+        const actions = await getActiveActionsMock(blockeeId);
+        if (actions.length > 0) {
+          this.logger.error({ msg: 'found active actions on blocking service', serviceId, actions });
+          throw new ActiveBlockingActionsError('could not reserve access for service due to active blocking actions');
+        }
+      });
+    } catch (error) {
+      // unlock blocking services
+      await this.lockRepository.deleteLock(lockId);
+      throw error;
+    }
+
+    return { lockId };
   }
 }

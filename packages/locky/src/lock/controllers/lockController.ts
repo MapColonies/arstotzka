@@ -2,7 +2,7 @@ import { Logger } from '@map-colonies/js-logger';
 import { RequestHandler } from 'express';
 import httpStatus, { StatusCodes } from 'http-status-codes';
 import { injectable, inject } from 'tsyringe';
-import { LockNotFoundError, ServiceAlreadyLockedError } from '../models/errors';
+import { ActiveBlockingActionsError, LockNotFoundError, ServiceAlreadyLockedError, ServiceNotRecognizedByRegistry } from '../models/errors';
 import { HttpError } from '../../common/errors';
 import { SERVICES } from '../../common/constants';
 import { LockManager, LockRequest } from '../models/lockManager';
@@ -18,8 +18,8 @@ export class LockController {
 
   public createLock: CreateLockHandler = async (req, res, next) => {
     try {
-      const createdLock = await this.manager.lock(req.body);
-      return res.status(httpStatus.CREATED).json(createdLock);
+      const lock = await this.manager.lock(req.body);
+      return res.status(httpStatus.CREATED).json(lock);
     } catch (error) {
       if (error instanceof ServiceAlreadyLockedError) {
         (error as HttpError).status = StatusCodes.CONFLICT;
@@ -40,11 +40,17 @@ export class LockController {
     }
   };
 
-  public reserveLock: ReserveAccessHandler = async (req, res, next) => {
+  public reserveAccess: ReserveAccessHandler = async (req, res, next) => {
     try {
       const lock = await this.manager.reserve(req.query.service);
       return res.status(httpStatus.CREATED).json(lock);
     } catch (error) {
+      if (error instanceof ServiceNotRecognizedByRegistry) {
+        (error as HttpError).status = StatusCodes.NOT_FOUND;
+      }
+      if (error instanceof ServiceAlreadyLockedError || error instanceof ActiveBlockingActionsError) {
+        (error as HttpError).status = StatusCodes.CONFLICT;
+      }
       return next(error);
     }
   };

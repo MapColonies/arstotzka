@@ -10,7 +10,7 @@ export const lockRouterFactory: FactoryFunction<Router> = (dependencyContainer) 
 
   router.post('/', controller.createLock);
   router.delete('/:lockId', controller.deleteLock);
-  // router.post('/reserve', controller.reserveLock);
+  router.post('/reserve', controller.reserveAccess);
 
   return router;
 };
