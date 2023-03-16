@@ -1,0 +1,43 @@
+{
+    "name": "@map-colonies/vector-management-common",
+    "version": "1.0.0",
+    "description": "vector management common",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+      "test:unit": "jest --config=./tests/configurations/unit/jest.config.js",
+      "format": "prettier --check . --ignore-path ../../.prettierignore",
+      "format:fix": "prettier --write . --ignore-path ../../.prettierignore",
+      "prelint:fix": "npm run format:fix",
+      "prelint": "npm run format",
+      "lint": "eslint .",
+      "lint:fix": "eslint --fix .",
+      "test": "npm run test:unit",
+      "prebuild": "npm run clean",
+      "build": "tsc --project tsconfig.build.json",
+      "clean": "rimraf dist",
+      "prepack": "npm run build"
+    },
+    "repository": {
+      "type": "git",
+      "url": ""
+    },
+    "author": "MapColonies",
+    "license": "ISC",
+    "files": [
+      "dist"
+    ],
+    "dependencies": {
+    },
+    "devDependencies": {
+      "@map-colonies/eslint-config": "^3.1.3",
+      "@map-colonies/prettier-config": "0.0.1",
+      "@types/node": "^14.14.12",
+      "eslint": "^8.30.0",
+      "prettier": "^2.8.1",
+      "pretty-quick": "^3.1.3",
+      "ts-jest": "^29.0.5",
+      "ts-node": "^10.9.1",
+      "typescript": "^4.9.4"
+    }
+  }

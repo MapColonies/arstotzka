@@ -1,4 +1,4 @@
-import { Parallelism } from './action';
+import { Parallelism } from '@map-colonies/vector-management-common';
 
 export const parallelismToMaxActive = (parallelism: Parallelism): number => {
   switch (parallelism) {

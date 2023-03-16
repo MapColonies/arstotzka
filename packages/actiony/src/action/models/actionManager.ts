@@ -1,9 +1,10 @@
 import { Logger } from '@map-colonies/js-logger';
+import { Parallelism } from '@map-colonies/vector-management-common';
 import { inject, injectable } from 'tsyringe';
 import { SERVICES } from '../../common/constants';
 import { ACTION_IDENTIFIER_COLUMN } from '../DAL/typeorm/action';
 import { ActionRepository, ACTION_CLOSED_STATUSES, ACTION_REPOSITORY_SYMBOL } from '../DAL/typeorm/actionRepository';
-import { Action, ActionFilter, ActionParams, ActionStatus, Parallelism, UpdatableActionParams } from './action';
+import { Action, ActionFilter, ActionParams, ActionStatus, UpdatableActionParams } from './action';
 import { ActionAlreadyClosedError, ActionNotFoundError, ParallelismMismatchError } from './errors';
 import { getServiceFromRegistryMock, Service } from './registryMock';
 import { parallelismToMaxActive } from './util';

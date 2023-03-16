@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
-import { Action, ActionParams, ActionStatus, Parallelism, Sort } from '../../../../src/action/models/action';
+import { Parallelism } from '@map-colonies/vector-management-common';
+import { Action, ActionParams, ActionStatus, Sort } from '../../../../src/action/models/action';
 import { Service } from '../../../../src/action/models/registryMock';
 
 type HasProperty<K extends string, V> = {

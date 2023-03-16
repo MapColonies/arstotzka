@@ -4,13 +4,13 @@ import httpStatusCodes from 'http-status-codes';
 import { DependencyContainer } from 'tsyringe';
 import { In, QueryFailedError } from 'typeorm';
 import { faker } from '@faker-js/faker';
+import { Parallelism, ServiceNotRecognizedByRegistry } from '@map-colonies/vector-management-common';
 import { ActionRepository, ACTION_REPOSITORY_SYMBOL } from '../../../src/action/DAL/typeorm/actionRepository';
 import { getApp } from '../../../src/app';
 import { SERVICES } from '../../../src/common/constants';
 import { BEFORE_ALL_TIMEOUT, LONG_RUNNING_TEST_TIMEOUT } from '../helpers';
 import { getServiceFromRegistryMock } from '../../../src/action/models/registryMock';
-import { Action, ActionFilter, ActionParams, ActionStatus, Parallelism, Sort, UpdatableActionParams } from '../../../src/action/models/action';
-import { ServiceNotRecognizedByRegistry } from '../../../src/action/models/errors';
+import { Action, ActionFilter, ActionParams, ActionStatus, Sort, UpdatableActionParams } from '../../../src/action/models/action';
 import { ActionRequestSender } from './helpers/requestSender';
 import { generateAction, generateActionParams, generateGetServiceResponse, sortByDate, stringifyAction, stringifyActions } from './helpers';
 

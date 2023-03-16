@@ -72,6 +72,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/lockResponse'
+        204:
+          description: Access granted, lock isn't needed
         400:
           $ref: '#/components/responses/BadRequest'
         404:

@@ -1,4 +1,4 @@
-import { ServiceNotRecognizedByRegistry } from './errors';
+import { ServiceNotRecognizedByRegistry } from '@map-colonies/vector-management-common';
 
 const TIMEOUT_MS = 250;
 

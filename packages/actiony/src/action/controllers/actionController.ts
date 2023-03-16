@@ -1,4 +1,5 @@
 import { Logger } from '@map-colonies/js-logger';
+import { ServiceNotRecognizedByRegistry } from '@map-colonies/vector-management-common';
 import { RequestHandler } from 'express';
 import httpStatus, { StatusCodes } from 'http-status-codes';
 import { injectable, inject } from 'tsyringe';
@@ -6,7 +7,7 @@ import { SERVICES } from '../../common/constants';
 import { HttpError } from '../../common/errors';
 import { Action, ActionFilter, ActionParams, UpdatableActionParams } from '../models/action';
 import { ActionManager } from '../models/actionManager';
-import { ActionAlreadyClosedError, ActionNotFoundError, ParallelismMismatchError, ServiceNotRecognizedByRegistry } from '../models/errors';
+import { ActionAlreadyClosedError, ActionNotFoundError, ParallelismMismatchError } from '../models/errors';
 
 interface ActionId {
   actionId: string;

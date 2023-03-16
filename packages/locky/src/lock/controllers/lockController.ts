@@ -2,7 +2,8 @@ import { Logger } from '@map-colonies/js-logger';
 import { RequestHandler } from 'express';
 import httpStatus, { StatusCodes } from 'http-status-codes';
 import { injectable, inject } from 'tsyringe';
-import { ActiveBlockingActionsError, LockNotFoundError, ServiceAlreadyLockedError, ServiceNotRecognizedByRegistry } from '../models/errors';
+import { ServiceNotRecognizedByRegistry } from '@map-colonies/vector-management-common';
+import { ActiveBlockingActionsError, LockNotFoundError, ServiceAlreadyLockedError } from '../models/errors';
 import { HttpError } from '../../common/errors';
 import { SERVICES } from '../../common/constants';
 import { LockManager, LockRequest } from '../models/lockManager';
@@ -43,6 +44,9 @@ export class LockController {
   public reserveAccess: ReserveAccessHandler = async (req, res, next) => {
     try {
       const lock = await this.manager.reserve(req.query.service);
+      if (lock === undefined) {
+        return res.status(httpStatus.NO_CONTENT).json();
+      }
       return res.status(httpStatus.CREATED).json(lock);
     } catch (error) {
       if (error instanceof ServiceNotRecognizedByRegistry) {

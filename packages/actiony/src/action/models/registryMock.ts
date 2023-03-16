@@ -1,5 +1,4 @@
-import { Parallelism } from './action';
-import { ServiceNotRecognizedByRegistry } from './errors';
+import { Parallelism, ServiceNotRecognizedByRegistry } from '@map-colonies/vector-management-common';
 
 const TIMEOUT_MS = 250;
 
