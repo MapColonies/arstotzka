@@ -33,7 +33,7 @@ paths:
             items:
               $ref: '#/components/schemas/actionStatus'
         - in: query
-          name: rotation
+          name: serviceRotation
           description: >-
             returned actions matching the following service rotation
           schema:
@@ -84,12 +84,9 @@ paths:
                   $ref: '#/components/schemas/actionState'
                 metadata:
                   $ref: '#/components/schemas/actionMetadata'
-                namespaceId:
-                  $ref: '#/components/schemas/namespaceId'
               required:
                 - serviceId
                 - state
-                - namespaceId
               additionalProperties: false
       responses:
         '201':
@@ -227,9 +224,9 @@ components:
           $ref: '#/components/schemas/serviceId'
         namespaceId:
           $ref: '#/components/schemas/namespaceId'
-        rotationId:
+        serviceRotation:
           $ref: '#/components/schemas/rotation'
-        parentRotationId:
+        parentRotation:
           $ref: '#/components/schemas/rotation'
         state:
           $ref: '#/components/schemas/actionState'
@@ -247,7 +244,7 @@ components:
         - actionId
         - serviceId
         - namespaceId
-        - rotationId
+        - serviceRotation
         - state
         - status
         - createdAt

@@ -1,5 +1,6 @@
+import { ActionFilter } from '@map-colonies/vector-management-common';
 import * as supertest from 'supertest';
-import { ActionFilter, ActionParams, UpdatableActionParams } from '../../../../src/action/models/action';
+import { ActionParams, UpdatableActionParams } from '../../../../src/action/models/action';
 
 export class ActionRequestSender {
   public constructor(private readonly app: Express.Application) {}

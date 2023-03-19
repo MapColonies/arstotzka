@@ -1,6 +1,6 @@
 import { Parallelism } from '@map-colonies/vector-management-common';
 
-export const parallelismToMaxActive = (parallelism: Parallelism): number => {
+export const parallelismToActiveBarrier = (parallelism: Parallelism): number => {
   switch (parallelism) {
     case Parallelism.SINGLE:
       return 0;
@@ -9,12 +9,4 @@ export const parallelismToMaxActive = (parallelism: Parallelism): number => {
     case Parallelism.MULTIPLE:
       return Infinity;
   }
-};
-
-export const stringifyRotation = (serviceRotation: number, parentServiceRotation?: number): string => {
-  // TODO: should be x.0 or 0.x instead?
-  if (parentServiceRotation === undefined) {
-    return `${serviceRotation}`;
-  }
-  return `${parentServiceRotation}.${serviceRotation}`;
 };

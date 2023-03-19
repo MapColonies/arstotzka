@@ -1,19 +1,19 @@
 import { Logger } from '@map-colonies/js-logger';
-import { Parallelism } from '@map-colonies/vector-management-common';
+import { IMediator } from '@map-colonies/mediator';
+import { Action, ActionFilter, ActionStatus, FlattedDetailedService, Parallelism } from '@map-colonies/vector-management-common';
 import { inject, injectable } from 'tsyringe';
 import { SERVICES } from '../../common/constants';
-import { ACTION_IDENTIFIER_COLUMN } from '../DAL/typeorm/action';
 import { ActionRepository, ACTION_CLOSED_STATUSES, ACTION_REPOSITORY_SYMBOL } from '../DAL/typeorm/actionRepository';
-import { Action, ActionFilter, ActionParams, ActionStatus, UpdatableActionParams } from './action';
+import { ActionParams, CreateActionParams, UpdatableActionParams } from './action';
 import { ActionAlreadyClosedError, ActionNotFoundError, ParallelismMismatchError } from './errors';
-import { getServiceFromRegistryMock, Service } from './registryMock';
-import { parallelismToMaxActive } from './util';
+import { parallelismToActiveBarrier } from './util';
 
 @injectable()
 export class ActionManager {
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
-    @inject(ACTION_REPOSITORY_SYMBOL) private readonly actionRepository: ActionRepository
+    @inject(ACTION_REPOSITORY_SYMBOL) private readonly actionRepository: ActionRepository,
+    @inject(SERVICES.MEDIATOR) private readonly mediator: IMediator
   ) {}
 
   public async getActions(filter: ActionFilter): Promise<Action[]> {
@@ -23,36 +23,35 @@ export class ActionManager {
   }
 
   public async createAction(params: ActionParams): Promise<string> {
-    const serviceId = params.serviceId;
+    this.logger.info({ msg: 'fetching service from registry', serviceId: params.serviceId });
 
-    this.logger.info({ msg: 'fetching service from registry', serviceId });
-
-    const service = await getServiceFromRegistryMock(serviceId);
+    const service = await this.mediator.fetchService(params.serviceId);
 
     this.logger.info({ msg: "validating service's action parallelism", service });
 
-    if (service.parallelism === Parallelism.SINGLE || service.parallelism === Parallelism.REPLACEABLE) {
-      await this.validateParallelism(service);
-    }
+    await this.validateParallelism(service);
 
-    this.logger.info({ msg: 'attempting to create action with the following params', params, ...service });
+    this.logger.info({ msg: 'attempting to create action with the following params', params, service });
 
     let actionId: string;
 
-    const actionParams = { ...params, rotationId: service.serviceRotation, parentRotationId: service.parentRotation };
+    const actionParams: CreateActionParams = {
+      ...params,
+      namespaceId: service.namespaceId,
+      serviceRotation: service.serviceRotation,
+      parentRotation: service.parentRotation,
+    };
 
     if (service.parallelism === Parallelism.SINGLE || service.parallelism === Parallelism.MULTIPLE) {
-      const creationResult = await this.actionRepository.createAction(actionParams);
-      actionId = creationResult.identifiers[0][ACTION_IDENTIFIER_COLUMN] as string;
+      actionId = await this.actionRepository.createAction(actionParams);
     } else {
-      const creationResult = await this.actionRepository.updateLastAndCreate(
+      actionId = await this.actionRepository.updateLastAndCreate(
         { status: ActionStatus.CANCELED, metadata: { closingReason: 'canceled by parallelism rules' } },
         actionParams
       );
-      actionId = creationResult.identifiers[0][ACTION_IDENTIFIER_COLUMN] as string;
     }
 
-    this.logger.info({ msg: 'created action', actionId });
+    this.logger.info({ msg: 'created action', actionId, serviceId: params.serviceId, namespaceId: service.namespaceId });
 
     return actionId;
   }
@@ -75,15 +74,18 @@ export class ActionManager {
     await this.actionRepository.updateOneAction(actionId, updateParams);
   }
 
-  private async validateParallelism(service: Service): Promise<unknown> {
-    const maxActiveActionsAllowed = parallelismToMaxActive(service.parallelism);
-    const activeActions = await this.getActions({ service: service.serviceId, status: [ActionStatus.ACTIVE], limit: maxActiveActionsAllowed + 1 });
-
-    if (activeActions.length > maxActiveActionsAllowed) {
-      this.logger.error({ msg: 'service parallelism mismatch', ...service, activeActions });
-      throw new ParallelismMismatchError(`service ${service.serviceId} has mismatched parallelism`);
+  private async validateParallelism(service: FlattedDetailedService): Promise<void> {
+    if (service.parallelism === Parallelism.MULTIPLE) {
+      return;
     }
 
-    return activeActions;
+    const activeBarrier = parallelismToActiveBarrier(service.parallelism);
+
+    const activeActions = await this.actionRepository.countActions({ service: service.serviceId, status: [ActionStatus.ACTIVE] });
+
+    if (activeActions > activeBarrier) {
+      this.logger.error({ msg: 'service parallelism mismatch', service, activeActions, activeBarrier });
+      throw new ParallelismMismatchError(`service ${service.serviceId} has mismatched parallelism`);
+    }
   }
 }

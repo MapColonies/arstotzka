@@ -1,5 +1,5 @@
+import { Action as IAction, ActionStatus } from '@map-colonies/vector-management-common';
 import { Column, Entity, CreateDateColumn, UpdateDateColumn, Index, PrimaryGeneratedColumn } from 'typeorm';
-import { Action as IAction, ActionStatus } from '../../models/action';
 
 export const ACTION_IDENTIFIER_COLUMN = 'actionId';
 
@@ -19,11 +19,11 @@ export class Action implements IAction {
   @Column({ name: 'namespace_id', type: 'integer' })
   public namespaceId!: number;
 
-  @Column({ name: 'rotation_id', type: 'integer' })
-  public rotationId!: number;
+  @Column({ name: 'service_rotation', type: 'integer' })
+  public serviceRotation!: number;
 
-  @Column({ name: 'parent_rotation_id', type: 'integer', nullable: true })
-  public parentRotationId!: number | null;
+  @Column({ name: 'parent_rotation', type: 'integer', nullable: true })
+  public parentRotation!: number | null;
 
   @Column({ name: 'action_status', type: 'enum', enum: ActionStatus, default: ActionStatus.ACTIVE })
   public status!: ActionStatus;

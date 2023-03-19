@@ -1,17 +1,13 @@
 import { Logger } from '@map-colonies/js-logger';
-import { ServiceNotRecognizedByRegistry } from '@map-colonies/vector-management-common';
+import { Action, ActionFilter, ServiceNotRecognizedByRegistry } from '@map-colonies/vector-management-common';
 import { RequestHandler } from 'express';
 import httpStatus, { StatusCodes } from 'http-status-codes';
 import { injectable, inject } from 'tsyringe';
 import { SERVICES } from '../../common/constants';
 import { HttpError } from '../../common/errors';
-import { Action, ActionFilter, ActionParams, UpdatableActionParams } from '../models/action';
+import { ActionId, ActionParams, UpdatableActionParams } from '../models/action';
 import { ActionManager } from '../models/actionManager';
 import { ActionAlreadyClosedError, ActionNotFoundError, ParallelismMismatchError } from '../models/errors';
-
-interface ActionId {
-  actionId: string;
-}
 
 type GetActionsHandler = RequestHandler<undefined, Action[], undefined, ActionFilter>;
 type PostActionHandler = RequestHandler<undefined, ActionId, ActionParams>;

@@ -1,13 +1,12 @@
 import { faker } from '@faker-js/faker';
-import { Parallelism } from '@map-colonies/vector-management-common';
-import { Action, ActionParams, ActionStatus, Sort } from '../../../../src/action/models/action';
-import { Service } from '../../../../src/action/models/registryMock';
+import { Action, ActionStatus, FlattedDetailedService, Parallelism, ServiceType, Sort } from '@map-colonies/vector-management-common';
+import { ActionParams } from '../../../../src/action/models/action';
 
 type HasProperty<K extends string, V> = {
   [P in K]: V;
 };
 
-type GeneratedActionParams = ActionParams & { rotationId?: number; parentRotationId?: number; status?: ActionStatus };
+type GeneratedActionParams = ActionParams & { namespaceId?: number; serviceRotation?: number; parentRotation?: number; status?: ActionStatus };
 
 export type StringifiedAction = Omit<Action, 'createdAt' | 'updatedAt' | 'closedAt'> & {
   createdAt: string;
@@ -18,8 +17,9 @@ export type StringifiedAction = Omit<Action, 'createdAt' | 'updatedAt' | 'closed
 export const generateAction = (params: Partial<GeneratedActionParams> = {}): GeneratedActionParams => {
   return {
     ...generateActionParams(params),
-    rotationId: params.rotationId ?? faker.datatype.number(),
-    parentRotationId: params.parentRotationId ?? faker.datatype.number(),
+    namespaceId: params.namespaceId ?? faker.datatype.number(),
+    serviceRotation: params.serviceRotation ?? faker.datatype.number(),
+    parentRotation: params.parentRotation ?? faker.datatype.number(),
     status: params.status ?? undefined,
   };
 };
@@ -27,7 +27,6 @@ export const generateAction = (params: Partial<GeneratedActionParams> = {}): Gen
 export const generateActionParams = (params: Partial<ActionParams> = {}): ActionParams => {
   return {
     serviceId: params.serviceId ?? faker.datatype.uuid(),
-    namespaceId: params.namespaceId ?? faker.datatype.number(),
     state: params.state ?? faker.datatype.number(),
     metadata: params.metadata ?? (JSON.parse(faker.datatype.json()) as Record<string, unknown>),
   };
@@ -54,11 +53,20 @@ export const sortByDate = <T extends HasProperty<K, Date | string>, K extends ke
   });
 };
 
-export const generateGetServiceResponse = (params: Partial<Service> = {}): Service => {
+export const generateGetServiceResponse = (params: Partial<FlattedDetailedService> = {}): FlattedDetailedService => {
   return {
+    namespaceId: params.namespaceId ?? faker.datatype.number(),
+    namespaceName: params.namespaceName ?? faker.datatype.string(),
     serviceId: params.serviceId ?? faker.datatype.uuid(),
+    serviceName: params.serviceName ?? faker.datatype.string(),
+    serviceType: params.serviceType ?? ServiceType.CONSUMER,
     parallelism: params.parallelism ?? Parallelism.SINGLE,
+    parent: params.parent ?? null,
     serviceRotation: params.serviceRotation ?? faker.datatype.number(),
-    parentRotation: params.parentRotation ?? faker.datatype.number(),
+    parentRotation: params.parentRotation ?? null,
+    children: params.children ?? [],
+    blockees: params.blockees ?? [],
+    createdAt: params.createdAt ?? faker.date.past(),
+    updatedAt: params.updatedAt ?? faker.date.past(),
   };
 };

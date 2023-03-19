@@ -1,3 +1,10 @@
+import { ActionStatus } from '@map-colonies/vector-management-common';
+import { ACTION_IDENTIFIER_COLUMN } from '../DAL/typeorm/action';
+
+export interface ActionId {
+  [ACTION_IDENTIFIER_COLUMN]: string;
+}
+
 export interface UpdatableActionParams {
   status?: ActionStatus;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- typeorm's QueryDeepPartialEntity does not recognize unknown types
@@ -7,34 +14,10 @@ export interface UpdatableActionParams {
 export interface ActionParams extends Omit<UpdatableActionParams, 'status'> {
   serviceId: string;
   state: number;
+}
+
+export interface CreateActionParams extends ActionParams {
   namespaceId: number;
-}
-
-export interface Action extends ActionParams {
-  namespaceId: number;
-  actionId: string;
-  rotationId: number;
-  parentRotationId: number | null;
-  status: ActionStatus;
-  createdAt: Date;
-  updatedAt: Date;
-  closedAt: Date | null;
-}
-
-export enum ActionStatus {
-  ACTIVE = 'active',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  CANCELED = 'canceled',
-}
-
-export type Sort = 'asc' | 'desc';
-
-export interface ActionFilter {
-  service?: string;
-  rotation?: number;
-  parentRotation?: number;
-  status?: ActionStatus[];
-  limit?: number;
-  sort?: Sort;
+  serviceRotation: number;
+  parentRotation: number | null;
 }
