@@ -1,12 +1,14 @@
 import { Logger } from '@map-colonies/js-logger';
+import { IMediator } from '@map-colonies/mediator';
+import { ActionStatus } from '@map-colonies/vector-management-common';
 import { inject, injectable } from 'tsyringe';
 import { SERVICES } from '../../common/constants';
 import { Service } from '../DAL/typeorm/service';
 import { ServiceRepository, SERVICE_REPOSITORY_SYMBOL } from '../DAL/typeorm/serviceRepository';
-import { getActiveActionsMock } from './actionyMock';
 import { ServiceIsActiveError, ServiceNotFoundError } from './errors';
-import { lockServicesMock, unlockServicesMock } from './lockyMock';
 import { DetailedService, FlattedDetailedService } from './service';
+
+const ROTATION_LOCK_EXPIRATION_MS = 60000;
 
 const flattenDetailedService = (service: Required<DetailedService>, children: string[]): FlattedDetailedService => {
   const {
@@ -47,7 +49,8 @@ const flattenDetailedService = (service: Required<DetailedService>, children: st
 export class ServiceManager {
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
-    @inject(SERVICE_REPOSITORY_SYMBOL) private readonly serviceRepository: ServiceRepository
+    @inject(SERVICE_REPOSITORY_SYMBOL) private readonly serviceRepository: ServiceRepository,
+    @inject(SERVICES.MEDIATOR) private readonly mediator: IMediator
   ) {}
 
   public async detail(serviceId: string): Promise<FlattedDetailedService> {
@@ -81,48 +84,46 @@ export class ServiceManager {
     }
 
     const descendants = (await this.serviceRepository.findDescendants(service, false)) as Service[];
-
     const serviceIds = descendants.map((descendant) => descendant.id);
 
     this.logger.info({ msg: 'locking services', serviceIds });
 
-    const lock = await lockServicesMock({ services: serviceIds, expiration: 1000 });
+    const lock = await this.mediator.createLock({
+      services: serviceIds,
+      expiration: ROTATION_LOCK_EXPIRATION_MS,
+      reason: `service ${serviceId} rotation`,
+    });
 
     this.logger.info({ msg: 'locked services', serviceIds, lock });
 
     try {
-      // TODO: in promise all fashion
-      for await (const serviceId of serviceIds) {
-        const activeActions = await getActiveActionsMock(serviceId);
+      const filterActionPromises = serviceIds.map(async (serviceId) => {
+        const activeActions = await this.mediator.filterActions({ service: serviceId, status: [ActionStatus.ACTIVE], limit: 1 });
         if (activeActions.length > 0) {
+          this.logger.error({ msg: `service ${serviceId} has active actions`, serviceId });
           throw new ServiceIsActiveError(`service ${serviceId} has active actions`);
         }
-      }
+      });
+      await Promise.all(filterActionPromises);
     } catch (error) {
-      if (error instanceof ServiceIsActiveError) {
-        this.logger.error({ msg: `service ${serviceId} has active actions`, err: error, serviceId });
-      } else {
-        this.logger.error({ msg: `could not determine ${serviceId} active actions`, err: error, serviceId });
-      }
-
       this.logger.info({ msg: 'unlocking services', serviceIds, lock });
       // TODO: this could also fail
-      await unlockServicesMock(lock.lockId);
+      await this.mediator.removeLock(lock.lockId);
 
       throw error;
     }
 
-    const insertionResult = await this.serviceRepository.createServiceRotation(serviceId);
+    const rotationIds = await this.serviceRepository.createServiceRotation(serviceId);
 
     this.logger.info({
       msg: 'rotation creation completed',
       serviceIds,
       lock,
-      insertResult: insertionResult.generatedMaps,
-      insertCount: insertionResult.generatedMaps.length,
+      rotationIds,
+      rotationIdsCount: rotationIds.length,
     });
 
     this.logger.info({ msg: 'unlocking services', serviceIds, lock });
-    await unlockServicesMock(lock.lockId);
+    await this.mediator.removeLock(lock.lockId);
   }
 }

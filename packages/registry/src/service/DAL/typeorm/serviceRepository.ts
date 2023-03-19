@@ -1,5 +1,5 @@
 import { FactoryFunction } from 'tsyringe';
-import { DataSource, InsertResult } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { DATA_SOURCE_PROVIDER } from '../../../common/db';
 import { Rotation as RotationEntity, ROTATION_IDENTIFIER_COLUMN } from './rotation';
 import { Service as ServiceEntity } from './service';
@@ -48,7 +48,7 @@ const createServiceRepository = (dataSource: DataSource) => {
     async findBlocks(id: string): Promise<BlockEntity[]> {
       return this.manager.createQueryBuilder(BlockEntity, 'block').where('block.blocker_id = :id', { id }).getMany();
     },
-    async createServiceRotation(id: string): Promise<InsertResult> {
+    async createServiceRotation(id: string): Promise<string[]> {
       const service = (await this.findOneBy({ id })) as ServiceEntity;
 
       // get a flat descendants tree of the service in full depth, this includes the service itself
@@ -68,13 +68,16 @@ const createServiceRepository = (dataSource: DataSource) => {
       });
 
       // save the new rotations
-      return this.manager
+      const insertResult = await this.manager
         .createQueryBuilder(RotationEntity, 'rotation')
         .insert()
         .into(RotationEntity)
         .values(newRotations)
         .returning([ROTATION_IDENTIFIER_COLUMN, 'serviceId', 'parentRotation', 'serviceRotation'])
         .execute();
+
+      // TODO: return all the requested returing object
+      return insertResult.generatedMaps.map((map) => map[ROTATION_IDENTIFIER_COLUMN] as string);
     },
   });
 };
