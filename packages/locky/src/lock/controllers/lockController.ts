@@ -3,10 +3,11 @@ import { RequestHandler } from 'express';
 import httpStatus, { StatusCodes } from 'http-status-codes';
 import { injectable, inject } from 'tsyringe';
 import { ServiceNotRecognizedByRegistry } from '@map-colonies/vector-management-common';
+import { LockRequest } from '@map-colonies/vector-management-common/src/types/locky';
 import { ActiveBlockingActionsError, LockNotFoundError, ServiceAlreadyLockedError } from '../models/errors';
 import { HttpError } from '../../common/errors';
 import { SERVICES } from '../../common/constants';
-import { LockManager, LockRequest } from '../models/lockManager';
+import { LockManager } from '../models/lockManager';
 import { LockId } from '../models/lock';
 
 type CreateLockHandler = RequestHandler<undefined, LockId, LockRequest>;

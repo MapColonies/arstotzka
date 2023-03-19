@@ -1,8 +1,8 @@
+import { LockRequest } from '@map-colonies/vector-management-common/src/types/locky';
 import { FactoryFunction } from 'tsyringe';
-import { ArrayOverlap, DataSource, DeleteResult, InsertResult, IsNull, Raw } from 'typeorm';
+import { ArrayOverlap, DataSource, DeleteResult, IsNull, Raw } from 'typeorm';
 import { DATA_SOURCE_PROVIDER } from '../../../common/db';
 import { LockId } from '../../models/lock';
-import { LockRequest } from '../../models/lockManager';
 import { Lock as LockEntity, LOCK_IDENTIFIER_COLUMN } from './lock';
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -17,18 +17,22 @@ const createLockRepository = (dataSource: DataSource) => {
         ],
       });
     },
-    async createLock(lockRequest: LockRequest): Promise<InsertResult> {
+    async createLock(lockRequest: LockRequest): Promise<string> {
       const { services, expiration, reason } = lockRequest;
 
       const expiresAt = expiration !== undefined ? (): string => `LOCALTIMESTAMP + INTERVAL '${expiration} milliseconds'` : null;
 
-      return this.manager
+      const insertResult = await this.manager
         .createQueryBuilder(LockEntity, 'lock')
         .insert()
         .into(LockEntity)
         .values({ serviceIds: services, expiresAt, reason })
         .returning([LOCK_IDENTIFIER_COLUMN])
         .execute();
+
+      const lockId = insertResult.generatedMaps[0][LOCK_IDENTIFIER_COLUMN] as string;
+
+      return lockId;
     },
     async deleteLock(lockId: string): Promise<DeleteResult> {
       return this.manager.createQueryBuilder(LockEntity, 'lock').delete().from(LockEntity).where('lock_id = :lockId', { lockId }).execute();

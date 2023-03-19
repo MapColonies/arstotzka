@@ -1,26 +1,21 @@
 import { Logger } from '@map-colonies/js-logger';
 import { inject, injectable } from 'tsyringe';
-import { VectorManagementClient } from '@map-colonies/vector-management-client';
+import { IMediator } from '@map-colonies/mediator';
+import { LockRequest } from '@map-colonies/vector-management-common/src/types/locky';
 import { ActionStatus } from '@map-colonies/vector-management-common';
 import { SERVICES } from '../../common/constants';
-import { LOCK_IDENTIFIER_COLUMN } from '../DAL/typeorm/lock';
 import { LockRepository, LOCK_REPOSITORY_SYMBOL } from '../DAL/typeorm/lockRepository';
 import { ActiveBlockingActionsError, LockNotFoundError, ServiceAlreadyLockedError } from './errors';
 import { LockId } from './lock';
 
 const SERVICE_RESERVATION_LOCK_EXPIRATION = 60000;
 
-export interface LockRequest {
-  services: string[];
-  expiration?: number;
-  reason?: string;
-}
-
 @injectable()
 export class LockManager {
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
-    @inject(LOCK_REPOSITORY_SYMBOL) private readonly lockRepository: LockRepository
+    @inject(LOCK_REPOSITORY_SYMBOL) private readonly lockRepository: LockRepository,
+    @inject(SERVICES.MEDIATOR) private readonly mediator: IMediator
   ) {}
 
   public async lock(lockRequest: LockRequest): Promise<LockId> {
@@ -33,9 +28,7 @@ export class LockManager {
       throw new ServiceAlreadyLockedError('could not lock at least one of requested services');
     }
 
-    const insertResult = await this.lockRepository.createLock(lockRequest);
-
-    const lockId = insertResult.generatedMaps[0][LOCK_IDENTIFIER_COLUMN] as string;
+    const lockId = await this.lockRepository.createLock(lockRequest);
 
     this.logger.info({ msg: 'created lock on services', lockRequest, lockId });
 
@@ -68,12 +61,7 @@ export class LockManager {
     }
 
     // get the service from the registry ,this validates the service really exists and gets its blockees
-    const client = new VectorManagementClient({
-      registry: { endpoint: 'http://localhost:8081' },
-      actiony: { endpoint: 'http://localhost:8080' },
-      logger: this.logger,
-    });
-    const service = await client.getService(serviceId);
+    const service = await this.mediator.fetchService(serviceId);
 
     if (service.blockees.length === 0) {
       this.logger.info({ msg: 'service has no configured blockee services, no need to lock', serviceId });
@@ -81,27 +69,27 @@ export class LockManager {
     }
 
     // lock blocked by services
-    const insertResult = await this.lockRepository.createLock({
+    const lockId = await this.lockRepository.createLock({
       services: service.blockees,
       expiration: SERVICE_RESERVATION_LOCK_EXPIRATION,
       reason: `${serviceId} access reserve`,
     });
 
-    const lockId = insertResult.generatedMaps[0][LOCK_IDENTIFIER_COLUMN] as string;
-
     try {
       // for each of the blocking services get the active actions and expect none
-      const getActionPromises = service.blockees.map(async (blockeeId) => {
-        const actions = await client.getActions({ service: blockeeId, status: [ActionStatus.ACTIVE], limit: 1 });
+      const filterActionPromises = service.blockees.map(async (blockeeId) => {
+        const actions = await this.mediator.filterActions({ service: blockeeId, status: [ActionStatus.ACTIVE], limit: 1 });
         if (actions.length > 0) {
           this.logger.error({ msg: 'found active actions on blockee service', serviceId, blockeeId, actions });
           throw new ActiveBlockingActionsError('could not reserve access for service due to active blocking actions');
         }
       });
 
-      await Promise.all(getActionPromises);
+      await Promise.all(filterActionPromises);
     } catch (error) {
       // unlock blocking services
+      this.logger.info({ msg: 'unlocking blockees services', lockId });
+      // TODO: this could also fail
       await this.lockRepository.deleteLock(lockId);
       throw error;
     }
