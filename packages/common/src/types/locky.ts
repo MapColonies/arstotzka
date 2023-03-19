@@ -1,1 +1,5 @@
-export const TEMP = 1;
+export interface LockRequest {
+  services: string[];
+  expiration?: number;
+  reason?: string;
+}
