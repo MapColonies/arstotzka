@@ -7,7 +7,6 @@ export interface UpdatableActionParams {
 export interface ActionParams extends Omit<UpdatableActionParams, 'status'> {
   serviceId: string;
   state: number;
-  namespaceId: number;
 }
 
 export interface Action extends ActionParams {
