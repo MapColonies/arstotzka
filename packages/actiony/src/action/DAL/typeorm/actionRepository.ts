@@ -1,9 +1,9 @@
 import { DataSource, EntityManager, FindOptionsWhere, In } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { FactoryFunction } from 'tsyringe';
-import { Action, ActionFilter, ActionStatus } from '@map-colonies/vector-management-common';
+import { Action, ActionFilter, ActionStatus, UpdatableActionParams } from '@map-colonies/vector-management-common';
 import { DATA_SOURCE_PROVIDER } from '../../../common/db';
-import { CreateActionParams, UpdatableActionParams } from '../../models/action';
+import { CreateActionParams } from '../../models/action';
 import { Action as ActionEntity, ACTION_IDENTIFIER_COLUMN } from './action';
 
 const filterToOptions = (filter: ActionFilter): FindOptionsWhere<ActionEntity> => {

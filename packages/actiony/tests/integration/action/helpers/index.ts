@@ -1,6 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { Action, ActionStatus, FlattedDetailedService, Parallelism, ServiceType, Sort } from '@map-colonies/vector-management-common';
-import { ActionParams } from '../../../../src/action/models/action';
+import { Action, ActionParams, ActionStatus, FlattedDetailedService, Parallelism, ServiceType, Sort } from '@map-colonies/vector-management-common';
 
 type HasProperty<K extends string, V> = {
   [P in K]: V;

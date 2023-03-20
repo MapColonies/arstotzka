@@ -6,7 +6,7 @@ import { trace } from '@opentelemetry/api';
 import { instancePerContainerCachingFactory, DependencyContainer } from 'tsyringe';
 import { HealthCheck } from '@godaddy/terminus';
 import { CleanupRegistry } from '@map-colonies/cleanup-registry';
-import { Mediator } from '@map-colonies/mediator';
+import { Mediator, MediatorConfig } from '@map-colonies/mediator';
 import { dataSourceFactory, DATA_SOURCE_PROVIDER, getDbHealthCheckFunction } from './common/db';
 import { tracing } from './common/tracing';
 import { HEALTHCHECK, ON_SIGNAL, SERVICES, SERVICE_NAME } from './common/constants';
@@ -24,17 +24,16 @@ export const registerExternalValues = async (options?: RegisterOptions): Promise
 
   try {
     const loggerConfig = config.get<LoggerOptions>('telemetry.logger');
-    const logger = jsLogger({ ...loggerConfig, mixin: getOtelMixin() });
+    const logger = jsLogger({ ...loggerConfig, mixin: getOtelMixin(), base: { service: SERVICE_NAME } });
 
-    const mediator = new Mediator({
-      registry: { endpoint: 'http://localhost:8081' },
-      logger: logger,
-    });
+    const mediatorConfig = config.get<MediatorConfig>('mediator');
+    const mediator = new Mediator({ ...mediatorConfig, logger: logger.child({ component: 'mediator' }) });
 
     cleanupRegistry.on('itemFailed', (id, error, msg) => logger.error({ msg, itemId: id, err: error }));
     cleanupRegistry.on('finished', (status) => logger.info({ msg: `cleanup registry finished cleanup`, status }));
 
     cleanupRegistry.register({ func: tracing.stop.bind(tracing), id: SERVICES.TRACER });
+
     const tracer = trace.getTracer(SERVICE_NAME);
 
     const dependencies: InjectionObject<unknown>[] = [

@@ -59,5 +59,17 @@
     },
     "database": "DB_NAME",
     "schema": "DB_SCHEMA"
+  },
+  "mediator": {
+    "timeout": {
+      "__name": "MEDIATOR_CLIENT_TIMEOUT",
+      "__format": "number"
+    },
+    "actiony": {
+      "url": "MEDIATOR_ACTIONY_URL"
+    },
+    "locky": {
+      "url": "MEDIATOR_LOCKY_URL"
+    }
   }
 }

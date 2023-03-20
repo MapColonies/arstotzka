@@ -1,11 +1,21 @@
 import { Logger } from '@map-colonies/js-logger';
 import { IMediator } from '@map-colonies/mediator';
-import { Action, ActionFilter, ActionStatus, FlattedDetailedService, Parallelism } from '@map-colonies/vector-management-common';
+import {
+  Action,
+  ActionAlreadyClosedError,
+  ActionFilter,
+  ActionNotFoundError,
+  ActionParams,
+  ActionStatus,
+  FlattedDetailedService,
+  Parallelism,
+  ParallelismMismatchError,
+  UpdatableActionParams,
+} from '@map-colonies/vector-management-common';
 import { inject, injectable } from 'tsyringe';
 import { SERVICES } from '../../common/constants';
 import { ActionRepository, ACTION_CLOSED_STATUSES, ACTION_REPOSITORY_SYMBOL } from '../DAL/typeorm/actionRepository';
-import { ActionParams, CreateActionParams, UpdatableActionParams } from './action';
-import { ActionAlreadyClosedError, ActionNotFoundError, ParallelismMismatchError } from './errors';
+import { CreateActionParams } from './action';
 import { parallelismToActiveBarrier } from './util';
 
 @injectable()
@@ -61,7 +71,7 @@ export class ActionManager {
 
     if (action === null) {
       this.logger.error({ msg: 'action not found for update', actionId });
-      throw new ActionNotFoundError(`actionId ${actionId} not found`);
+      throw new ActionNotFoundError(`action ${actionId} not found`);
     }
 
     if (ACTION_CLOSED_STATUSES.includes(action.status)) {

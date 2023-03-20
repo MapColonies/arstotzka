@@ -4,12 +4,20 @@ import httpStatusCodes from 'http-status-codes';
 import { DependencyContainer } from 'tsyringe';
 import { In, QueryFailedError } from 'typeorm';
 import { faker } from '@faker-js/faker';
-import { Action, ActionFilter, ActionStatus, Parallelism, ServiceNotRecognizedByRegistry, Sort } from '@map-colonies/vector-management-common';
+import {
+  Action,
+  ActionFilter,
+  ActionParams,
+  ActionStatus,
+  Parallelism,
+  ServiceNotFoundError,
+  Sort,
+  UpdatableActionParams,
+} from '@map-colonies/vector-management-common';
 import { ActionRepository, ACTION_REPOSITORY_SYMBOL } from '../../../src/action/DAL/typeorm/actionRepository';
 import { getApp } from '../../../src/app';
 import { SERVICES } from '../../../src/common/constants';
 import { BEFORE_ALL_TIMEOUT, LONG_RUNNING_TEST_TIMEOUT } from '../helpers';
-import { ActionParams, UpdatableActionParams } from '../../../src/action/models/action';
 import { ActionRequestSender } from './helpers/requestSender';
 import { generateAction, generateActionParams, generateGetServiceResponse, sortByDate, stringifyAction, stringifyActions } from './helpers';
 
@@ -493,7 +501,7 @@ describe('action', function () {
         const params = generateActionParams();
         const { serviceId, ...restOfParams } = params;
 
-        const response = await requestSender.postAction(restOfParams as ActionParams);
+        const response = await requestSender.postAction(restOfParams);
 
         expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
         expect(response.body).toHaveProperty('message', "request.body should have required property 'serviceId'");
@@ -503,7 +511,7 @@ describe('action', function () {
         const params = generateActionParams();
         const { state, ...restOfParams } = params;
 
-        const response = await requestSender.postAction(restOfParams as ActionParams);
+        const response = await requestSender.postAction(restOfParams);
 
         expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
         expect(response.body).toHaveProperty('message', "request.body should have required property 'state'");
@@ -527,16 +535,16 @@ describe('action', function () {
         expect(response.body).toHaveProperty('message', 'request.body.metadata should be object');
       });
 
-      it('should return 409 if the requesting service is not recognized by the registry', async function () {
+      it('should return 404 if the requesting service is not recognized by the registry', async function () {
         const serviceId = faker.datatype.uuid();
-        const expectedMessage = `could not recognize service ${serviceId} on registry`;
-        fetchServiceMock.mockRejectedValue(new ServiceNotRecognizedByRegistry(expectedMessage));
+        const expectedMessage = `service ${serviceId} not found`;
+        fetchServiceMock.mockRejectedValue(new ServiceNotFoundError(expectedMessage));
 
         const params = generateActionParams({ serviceId });
 
         const response = await requestSender.postAction(params);
 
-        expect(response.status).toBe(httpStatusCodes.CONFLICT);
+        expect(response.status).toBe(httpStatusCodes.NOT_FOUND);
         expect(response.body).toHaveProperty('message', expectedMessage);
       });
 

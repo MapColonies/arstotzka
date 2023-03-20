@@ -5,7 +5,8 @@ import { Rotation as RotationEntity, ROTATION_IDENTIFIER_COLUMN } from './rotati
 import { Service as ServiceEntity } from './service';
 import { Block as BlockEntity } from './block';
 
-interface RotationInsertValues {
+interface RotationCreationResult {
+  [ROTATION_IDENTIFIER_COLUMN]: string;
   serviceId: string;
   parentRotation: number | null;
   serviceRotation: number;
@@ -48,7 +49,7 @@ const createServiceRepository = (dataSource: DataSource) => {
     async findBlocks(id: string): Promise<BlockEntity[]> {
       return this.manager.createQueryBuilder(BlockEntity, 'block').where('block.blocker_id = :id', { id }).getMany();
     },
-    async createServiceRotation(id: string): Promise<string[]> {
+    async createServiceRotation(id: string): Promise<RotationCreationResult[]> {
       const service = (await this.findOneBy({ id })) as ServiceEntity;
 
       // get a flat descendants tree of the service in full depth, this includes the service itself
@@ -58,7 +59,7 @@ const createServiceRepository = (dataSource: DataSource) => {
       const servicesWithCurrentRotation = await this.findCurrentRotations(descendants.map((descendant) => descendant.id));
 
       // create the new rotations
-      const newRotations: RotationInsertValues[] = servicesWithCurrentRotation.map((service: ServiceEntity) => {
+      const newRotations = servicesWithCurrentRotation.map((service: ServiceEntity) => {
         const currentRotation = service.rotations[0];
         return {
           serviceId: service.id,
@@ -67,17 +68,18 @@ const createServiceRepository = (dataSource: DataSource) => {
         };
       });
 
+      const returningColumns: (keyof RotationCreationResult)[] = [ROTATION_IDENTIFIER_COLUMN, 'serviceId', 'parentRotation', 'serviceRotation'];
+
       // save the new rotations
       const insertResult = await this.manager
         .createQueryBuilder(RotationEntity, 'rotation')
         .insert()
         .into(RotationEntity)
         .values(newRotations)
-        .returning([ROTATION_IDENTIFIER_COLUMN, 'serviceId', 'parentRotation', 'serviceRotation'])
+        .returning(returningColumns)
         .execute();
 
-      // TODO: return all the requested returing object
-      return insertResult.generatedMaps.map((map) => map[ROTATION_IDENTIFIER_COLUMN] as string);
+      return insertResult.generatedMaps as RotationCreationResult[];
     },
   });
 };

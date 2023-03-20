@@ -2,10 +2,11 @@ import { Logger } from '@map-colonies/js-logger';
 import { RequestHandler } from 'express';
 import httpStatus, { StatusCodes } from 'http-status-codes';
 import { injectable, inject } from 'tsyringe';
+import { ServiceNotFoundError, ServiceAlreadyLockedError } from '@map-colonies/vector-management-common';
 import { HttpError } from '../../common/errors';
 import { SERVICES } from '../../common/constants';
 import { ServiceManager } from '../models/serviceManager';
-import { ServiceAlreadyLockedError, ServiceIsActiveError, ServiceNotFoundError } from '../models/errors';
+import { ServiceIsActiveError } from '../models/errors';
 import { FlattedDetailedService } from '../models/service';
 
 type GetServiceHandler = RequestHandler<{ serviceId: string }, FlattedDetailedService>;
@@ -35,7 +36,7 @@ export class ServiceController {
       if (error instanceof ServiceNotFoundError) {
         (error as HttpError).status = StatusCodes.NOT_FOUND;
       }
-      if (error instanceof ServiceAlreadyLockedError || error instanceof ServiceIsActiveError || error instanceof ServiceNotFoundError) {
+      if (error instanceof ServiceAlreadyLockedError || error instanceof ServiceIsActiveError) {
         (error as HttpError).status = StatusCodes.CONFLICT;
       }
       return next(error);

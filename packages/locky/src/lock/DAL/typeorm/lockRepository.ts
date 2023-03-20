@@ -1,4 +1,4 @@
-import { LockRequest } from '@map-colonies/vector-management-common/src/types/locky';
+import { LockRequest } from '@map-colonies/vector-management-common';
 import { FactoryFunction } from 'tsyringe';
 import { ArrayOverlap, DataSource, DeleteResult, IsNull, Raw } from 'typeorm';
 import { DATA_SOURCE_PROVIDER } from '../../../common/db';

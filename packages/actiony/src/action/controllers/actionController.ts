@@ -1,13 +1,21 @@
 import { Logger } from '@map-colonies/js-logger';
-import { Action, ActionFilter, ServiceNotRecognizedByRegistry } from '@map-colonies/vector-management-common';
+import {
+  Action,
+  ActionFilter,
+  ParallelismMismatchError,
+  ServiceNotFoundError,
+  ActionAlreadyClosedError,
+  ActionNotFoundError,
+  ActionParams,
+  UpdatableActionParams,
+} from '@map-colonies/vector-management-common';
 import { RequestHandler } from 'express';
 import httpStatus, { StatusCodes } from 'http-status-codes';
 import { injectable, inject } from 'tsyringe';
 import { SERVICES } from '../../common/constants';
 import { HttpError } from '../../common/errors';
-import { ActionId, ActionParams, UpdatableActionParams } from '../models/action';
+import { ActionId } from '../models/action';
 import { ActionManager } from '../models/actionManager';
-import { ActionAlreadyClosedError, ActionNotFoundError, ParallelismMismatchError } from '../models/errors';
 
 type GetActionsHandler = RequestHandler<undefined, Action[], undefined, ActionFilter>;
 type PostActionHandler = RequestHandler<undefined, ActionId, ActionParams>;
@@ -31,7 +39,9 @@ export class ActionController {
       const actionId = await this.manager.createAction(req.body);
       return res.status(httpStatus.CREATED).json({ actionId });
     } catch (error) {
-      if (error instanceof ServiceNotRecognizedByRegistry || error instanceof ParallelismMismatchError) {
+      if (error instanceof ServiceNotFoundError) {
+        (error as HttpError).status = StatusCodes.NOT_FOUND;
+      } else if (error instanceof ParallelismMismatchError) {
         (error as HttpError).status = StatusCodes.CONFLICT;
       }
       return next(error);
@@ -45,8 +55,7 @@ export class ActionController {
     } catch (error) {
       if (error instanceof ActionNotFoundError) {
         (error as HttpError).status = StatusCodes.NOT_FOUND;
-      }
-      if (error instanceof ActionAlreadyClosedError) {
+      } else if (error instanceof ActionAlreadyClosedError) {
         (error as HttpError).status = StatusCodes.CONFLICT;
       }
       return next(error);

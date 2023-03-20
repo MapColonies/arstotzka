@@ -2,9 +2,8 @@ import { Logger } from '@map-colonies/js-logger';
 import { RequestHandler } from 'express';
 import httpStatus, { StatusCodes } from 'http-status-codes';
 import { injectable, inject } from 'tsyringe';
-import { ServiceNotRecognizedByRegistry } from '@map-colonies/vector-management-common';
-import { LockRequest } from '@map-colonies/vector-management-common/src/types/locky';
-import { ActiveBlockingActionsError, LockNotFoundError, ServiceAlreadyLockedError } from '../models/errors';
+import { ServiceNotFoundError, ServiceAlreadyLockedError, LockRequest, LockNotFoundError } from '@map-colonies/vector-management-common';
+import { ActiveBlockingActionsError } from '../models/errors';
 import { HttpError } from '../../common/errors';
 import { SERVICES } from '../../common/constants';
 import { LockManager } from '../models/lockManager';
@@ -50,10 +49,9 @@ export class LockController {
       }
       return res.status(httpStatus.CREATED).json(lock);
     } catch (error) {
-      if (error instanceof ServiceNotRecognizedByRegistry) {
+      if (error instanceof ServiceNotFoundError) {
         (error as HttpError).status = StatusCodes.NOT_FOUND;
-      }
-      if (error instanceof ServiceAlreadyLockedError || error instanceof ActiveBlockingActionsError) {
+      } else if (error instanceof ServiceAlreadyLockedError || error instanceof ActiveBlockingActionsError) {
         (error as HttpError).status = StatusCodes.CONFLICT;
       }
       return next(error);

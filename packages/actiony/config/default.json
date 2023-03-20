@@ -39,5 +39,11 @@
     },
     "database": "postgres",
     "schema": "actiony"
+  },
+  "mediator": {
+    "timeout": 10000,
+    "registry": {
+      "url": "http://registry.com"
+    }
   }
 }

@@ -1,49 +1,15 @@
 import { Logger } from '@map-colonies/js-logger';
 import { IMediator } from '@map-colonies/mediator';
-import { ActionStatus } from '@map-colonies/vector-management-common';
+import { ActionStatus, ServiceNotFoundError } from '@map-colonies/vector-management-common';
 import { inject, injectable } from 'tsyringe';
 import { SERVICES } from '../../common/constants';
 import { Service } from '../DAL/typeorm/service';
 import { ServiceRepository, SERVICE_REPOSITORY_SYMBOL } from '../DAL/typeorm/serviceRepository';
-import { ServiceIsActiveError, ServiceNotFoundError } from './errors';
-import { DetailedService, FlattedDetailedService } from './service';
+import { ServiceIsActiveError } from './errors';
+import { FlattedDetailedService } from './service';
+import { flattenDetailedService } from './util';
 
 const ROTATION_LOCK_EXPIRATION_MS = 60000;
-
-const flattenDetailedService = (service: Required<DetailedService>, children: string[]): FlattedDetailedService => {
-  const {
-    namespace,
-    name: serviceName,
-    serviceType,
-    id: serviceId,
-    parallelism,
-    parentServiceId: parent,
-    rotations,
-    blocks,
-    createdAt,
-    updatedAt,
-  } = service;
-  const { namespaceId, name: namespaceName } = namespace;
-  const { serviceRotation, parentRotation } = rotations[0];
-
-  const blockees = blocks.map((block) => block.blockeeId);
-
-  return {
-    namespaceId,
-    namespaceName,
-    serviceId,
-    serviceName,
-    serviceType,
-    parallelism,
-    serviceRotation,
-    parent,
-    parentRotation,
-    children,
-    blockees,
-    createdAt,
-    updatedAt,
-  };
-};
 
 @injectable()
 export class ServiceManager {
@@ -83,10 +49,13 @@ export class ServiceManager {
       throw new ServiceNotFoundError(`service ${serviceId} not found`);
     }
 
+    this.logger.debug({ msg: 'found service', serviceId, service });
+
+    // find flat descendant tree and lock them, the function also returns the service itself
     const descendants = (await this.serviceRepository.findDescendants(service, false)) as Service[];
     const serviceIds = descendants.map((descendant) => descendant.id);
 
-    this.logger.info({ msg: 'locking services', serviceIds });
+    this.logger.info({ msg: 'locking services', rotatingService: serviceId, serviceIds });
 
     const lock = await this.mediator.createLock({
       services: serviceIds,
@@ -97,33 +66,39 @@ export class ServiceManager {
     this.logger.info({ msg: 'locked services', serviceIds, lock });
 
     try {
+      // validate no active actions on the services, if so unlock and throw
       const filterActionPromises = serviceIds.map(async (serviceId) => {
         const activeActions = await this.mediator.filterActions({ service: serviceId, status: [ActionStatus.ACTIVE], limit: 1 });
+
         if (activeActions.length > 0) {
           this.logger.error({ msg: `service ${serviceId} has active actions`, serviceId });
           throw new ServiceIsActiveError(`service ${serviceId} has active actions`);
         }
       });
+
       await Promise.all(filterActionPromises);
     } catch (error) {
       this.logger.info({ msg: 'unlocking services', serviceIds, lock });
-      // TODO: this could also fail
+      // TODO: this could fail handle LockNotFoundError
       await this.mediator.removeLock(lock.lockId);
 
       throw error;
     }
 
-    const rotationIds = await this.serviceRepository.createServiceRotation(serviceId);
+    // create the new rotations for the whole service tree
+    const rotations = await this.serviceRepository.createServiceRotation(serviceId);
 
     this.logger.info({
       msg: 'rotation creation completed',
       serviceIds,
       lock,
-      rotationIds,
-      rotationIdsCount: rotationIds.length,
+      rotations: rotations,
+      rotationsCount: rotations.length,
     });
 
     this.logger.info({ msg: 'unlocking services', serviceIds, lock });
+
+    // TODO: this could also fail handle LockNotFoundError
     await this.mediator.removeLock(lock.lockId);
   }
 }
