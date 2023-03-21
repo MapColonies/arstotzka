@@ -42,6 +42,7 @@
   },
   "mediator": {
     "timeout": 10000,
+    "enableRetryStrategy": false,
     "registry": {
       "url": "http://registry.com"
     }

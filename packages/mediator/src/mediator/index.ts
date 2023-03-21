@@ -14,8 +14,9 @@ import {
   ServiceUnaccessibleError,
 } from '@map-colonies/vector-management-common';
 import axios, { AxiosError, AxiosInstance } from 'axios';
+import axiosRetry, { exponentialDelay, IAxiosRetryConfig } from 'axios-retry';
 import { StatusCodes } from 'http-status-codes';
-import { MediatorConfig, MediatorOptions, Remote } from './config';
+import { MediatorConfig, MediatorOptions, Remote, RetryStrategy, DEFAULT_RETRY_STRATEGY_DELAY } from './config';
 import { ILogger } from './logging';
 
 interface IRegistryMediator {
@@ -46,6 +47,9 @@ export class Mediator implements IMediator {
     this.logger = logger;
     this.config = config;
     this.client = axios.create({ timeout: options.timeout });
+    if (options.enableRetryStrategy === true) {
+      this.configureRetryStrategy(options.retryStrategy as RetryStrategy);
+    }
   }
 
   public async fetchService(serviceId: string): Promise<FlattedDetailedService> {
@@ -242,5 +246,18 @@ export class Mediator implements IMediator {
 
       throw axiosError;
     }
+  }
+
+  private configureRetryStrategy(retryStrategy: RetryStrategy): void {
+    const config: IAxiosRetryConfig = {
+      retries: retryStrategy.retries,
+      shouldResetTimeout: retryStrategy.shouldResetTimeout,
+      retryDelay: retryStrategy.isExponential === true ? exponentialDelay : (): number => retryStrategy.delay ?? DEFAULT_RETRY_STRATEGY_DELAY,
+      onRetry: (retryCount, error, requestConfig) => {
+        this.logger?.warn({ msg: `retrying request`, retryStrategy, retryCount, err: error, requestConfig });
+      },
+    };
+
+    axiosRetry(this.client, config);
   }
 }
