@@ -68,7 +68,7 @@ const createServiceRepository = (dataSource: DataSource) => {
         };
       });
 
-      const returningColumns: (keyof RotationCreationResult)[] = [ROTATION_IDENTIFIER_COLUMN, 'serviceId', 'parentRotation', 'serviceRotation'];
+      const returningColumns: (keyof RotationEntity)[] = [ROTATION_IDENTIFIER_COLUMN, 'serviceId', 'parentRotation', 'serviceRotation'];
 
       // save the new rotations
       const insertResult = await this.manager
