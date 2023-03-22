@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import { HealthCheck } from '@godaddy/terminus';
 import { DataSource, DataSourceOptions } from 'typeorm';
+import { SeederOptions } from 'typeorm-extension';
 import { DependencyContainer, FactoryFunction } from 'tsyringe';
 import { DbConfig, IConfig } from '../interfaces';
 import { promiseTimeout } from '../util';
@@ -49,4 +50,9 @@ export const dataSourceFactory: FactoryFunction<DataSource> = (container: Depend
   const dbConfig = config.get<DbConfig>('db');
   const dataSourceOptions = createDataSourceOptions(dbConfig);
   return new DataSource(dataSourceOptions);
+};
+
+export const seederOptions: SeederOptions = {
+  seeds: ['db/seeds/**/*{.ts,.js}'],
+  factories: ['db/factories/**/*{.ts,.js}'],
 };
