@@ -7,14 +7,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/MapColonies/root.git"
+        "url": "git+https://github.com/MapColonies/arstotzka.git"
     },
     "author": "MapColonies",
     "license": "ISC",
     "bugs": {
-        "url": "https://github.com/MapColonies/root/issues"
+        "url": "https://github.com/MapColonies/arstotzka/issues"
     },
-    "homepage": "https://github.com/MapColonies/root#readme",
+    "homepage": "https://github.com/MapColonies/arstotzka#readme",
     "workspaces": [
         "packages/*"
     ],
