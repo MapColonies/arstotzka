@@ -1,4 +1,4 @@
-import { ActionParams } from '@map-colonies/vector-management-common';
+import { ActionParams } from '@map-colonies/arstotzka-common';
 import { ACTION_IDENTIFIER_COLUMN } from '../DAL/typeorm/action';
 
 export interface ActionId {

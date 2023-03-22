@@ -12,7 +12,7 @@ import {
   ParallelismMismatchError,
   ActionAlreadyClosedError,
   ServiceUnaccessibleError,
-} from '@map-colonies/vector-management-common';
+} from '@map-colonies/arstotzka-common';
 import axios, { AxiosError, AxiosInstance } from 'axios';
 import axiosRetry, { exponentialDelay, IAxiosRetryConfig } from 'axios-retry';
 import { StatusCodes } from 'http-status-codes';

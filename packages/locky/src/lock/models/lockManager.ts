@@ -1,7 +1,7 @@
 import { Logger } from '@map-colonies/js-logger';
 import { inject, injectable } from 'tsyringe';
-import { IMediator } from '@map-colonies/mediator';
-import { ActionStatus, LockNotFoundError, LockRequest, ServiceAlreadyLockedError } from '@map-colonies/vector-management-common';
+import { IMediator } from '@map-colonies/arstotzka-mediator';
+import { ActionStatus, LockNotFoundError, LockRequest, ServiceAlreadyLockedError } from '@map-colonies/arstotzka-common';
 import { SERVICES } from '../../common/constants';
 import { LockRepository, LOCK_REPOSITORY_SYMBOL } from '../DAL/typeorm/lockRepository';
 import { ActiveBlockingActionsError } from './errors';

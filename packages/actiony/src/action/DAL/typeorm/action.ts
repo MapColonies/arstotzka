@@ -1,4 +1,4 @@
-import { Action as IAction, ActionStatus } from '@map-colonies/vector-management-common';
+import { Action as IAction, ActionStatus } from '@map-colonies/arstotzka-common';
 import { Column, Entity, CreateDateColumn, UpdateDateColumn, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 export const ACTION_IDENTIFIER_COLUMN = 'actionId';

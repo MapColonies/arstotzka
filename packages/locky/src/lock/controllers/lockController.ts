@@ -2,7 +2,7 @@ import { Logger } from '@map-colonies/js-logger';
 import { RequestHandler } from 'express';
 import httpStatus, { StatusCodes } from 'http-status-codes';
 import { injectable, inject } from 'tsyringe';
-import { ServiceNotFoundError, ServiceAlreadyLockedError, LockRequest, LockNotFoundError } from '@map-colonies/vector-management-common';
+import { ServiceNotFoundError, ServiceAlreadyLockedError, LockRequest, LockNotFoundError } from '@map-colonies/arstotzka-common';
 import { ActiveBlockingActionsError } from '../models/errors';
 import { HttpError } from '../../common/errors';
 import { SERVICES } from '../../common/constants';

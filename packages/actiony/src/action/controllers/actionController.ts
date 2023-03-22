@@ -8,7 +8,7 @@ import {
   ActionNotFoundError,
   ActionParams,
   UpdatableActionParams,
-} from '@map-colonies/vector-management-common';
+} from '@map-colonies/arstotzka-common';
 import { RequestHandler } from 'express';
 import httpStatus, { StatusCodes } from 'http-status-codes';
 import { injectable, inject } from 'tsyringe';

@@ -1,5 +1,5 @@
 import { Logger } from '@map-colonies/js-logger';
-import { IMediator } from '@map-colonies/mediator';
+import { IMediator } from '@map-colonies/arstotzka-mediator';
 import {
   Action,
   ActionAlreadyClosedError,
@@ -11,7 +11,7 @@ import {
   Parallelism,
   ParallelismMismatchError,
   UpdatableActionParams,
-} from '@map-colonies/vector-management-common';
+} from '@map-colonies/arstotzka-common';
 import { inject, injectable } from 'tsyringe';
 import { SERVICES } from '../../common/constants';
 import { ActionRepository, ACTION_CLOSED_STATUSES, ACTION_REPOSITORY_SYMBOL } from '../DAL/typeorm/actionRepository';

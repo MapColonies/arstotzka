@@ -1,4 +1,4 @@
-import { FlattedDetailedService } from '@map-colonies/vector-management-common';
+import { FlattedDetailedService } from '@map-colonies/arstotzka-common';
 import { DetailedService } from './service';
 
 export const flattenDetailedService = (service: Required<DetailedService>, children: string[]): FlattedDetailedService => {

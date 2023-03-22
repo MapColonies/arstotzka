@@ -6,7 +6,7 @@ import { trace } from '@opentelemetry/api';
 import { instancePerContainerCachingFactory, DependencyContainer } from 'tsyringe';
 import { HealthCheck } from '@godaddy/terminus';
 import { CleanupRegistry } from '@map-colonies/cleanup-registry';
-import { Mediator, MediatorConfig } from '@map-colonies/mediator';
+import { Mediator, MediatorConfig } from '@map-colonies/arstotzka-mediator';
 import { dataSourceFactory, DATA_SOURCE_PROVIDER, getDbHealthCheckFunction } from './common/db';
 import { tracing } from './common/tracing';
 import { HEALTHCHECK, ON_SIGNAL, SERVICES, SERVICE_NAME } from './common/constants';

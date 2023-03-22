@@ -1,6 +1,6 @@
 import { Logger } from '@map-colonies/js-logger';
-import { IMediator } from '@map-colonies/mediator';
-import { ActionStatus, ServiceNotFoundError } from '@map-colonies/vector-management-common';
+import { IMediator } from '@map-colonies/arstotzka-mediator';
+import { ActionStatus, ServiceNotFoundError } from '@map-colonies/arstotzka-common';
 import { inject, injectable } from 'tsyringe';
 import { SERVICES } from '../../common/constants';
 import { Service } from '../DAL/typeorm/service';

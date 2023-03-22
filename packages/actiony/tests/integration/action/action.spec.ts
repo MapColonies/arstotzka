@@ -13,7 +13,7 @@ import {
   ServiceNotFoundError,
   Sort,
   UpdatableActionParams,
-} from '@map-colonies/vector-management-common';
+} from '@map-colonies/arstotzka-common';
 import { ActionRepository, ACTION_REPOSITORY_SYMBOL } from '../../../src/action/DAL/typeorm/actionRepository';
 import { getApp } from '../../../src/app';
 import { SERVICES } from '../../../src/common/constants';
@@ -501,7 +501,7 @@ describe('action', function () {
         const params = generateActionParams();
         const { serviceId, ...restOfParams } = params;
 
-        const response = await requestSender.postAction(restOfParams);
+        const response = await requestSender.postAction(restOfParams as ActionParams);
 
         expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
         expect(response.body).toHaveProperty('message', "request.body should have required property 'serviceId'");
@@ -511,7 +511,7 @@ describe('action', function () {
         const params = generateActionParams();
         const { state, ...restOfParams } = params;
 
-        const response = await requestSender.postAction(restOfParams);
+        const response = await requestSender.postAction(restOfParams as ActionParams);
 
         expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
         expect(response.body).toHaveProperty('message', "request.body should have required property 'state'");
@@ -658,7 +658,7 @@ describe('action', function () {
         const response = await requestSender.patchAction(uuid, { status: ActionStatus.CANCELED });
 
         expect(response.status).toBe(httpStatusCodes.NOT_FOUND);
-        expect(response.body).toHaveProperty('message', `actionId ${uuid} not found`);
+        expect(response.body).toHaveProperty('message', `action ${uuid} not found`);
       });
 
       it('should return 409 if the patched action has already been closed', async function () {

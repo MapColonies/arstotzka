@@ -1,4 +1,4 @@
-import { ActionFilter, ActionParams, UpdatableActionParams } from '@map-colonies/vector-management-common';
+import { ActionFilter, ActionParams, UpdatableActionParams } from '@map-colonies/arstotzka-common';
 import * as supertest from 'supertest';
 
 export class ActionRequestSender {

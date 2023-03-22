@@ -1,7 +1,7 @@
 {
-  "name": "@map-colonies/vector-management-common",
+  "name": "@map-colonies/arstotzka-common",
   "version": "1.0.0",
-  "description": "vector management common",
+  "description": "arstotzka common",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {

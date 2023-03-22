@@ -1,4 +1,4 @@
-import { Parallelism } from '@map-colonies/vector-management-common';
+import { Parallelism } from '@map-colonies/arstotzka-common';
 
 export const parallelismToActiveBarrier = (parallelism: Parallelism): number => {
   switch (parallelism) {
