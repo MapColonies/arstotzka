@@ -78,6 +78,7 @@ jobs:
   tests:
     name: Run Tests
     runs-on: ubuntu-latest
+    container: node:16
 
     strategy:
       matrix:
@@ -160,6 +161,14 @@ jobs:
 
       - name: build Docker image
         run: docker build -f ./packages/${{ matrix.package }}/Dockerfile -t ${{ matrix.package }}:latest .
+
+  build_commander_image:
+    name: Build Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
 
       - name: build commander Docker image
         run: docker build -f ./commander.Dockerfile -t arstotzka-commander:latest .
