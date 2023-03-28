@@ -161,5 +161,5 @@ jobs:
       - name: build Docker image
         run: docker build -f ./packages/${{ matrix.package }}/Dockerfile -t ${{ matrix.package }}:latest .
 
-      - name: build migrations Docker image
-        run: docker build -f ./packages/${{ matrix.package }}/migrations.Dockerfile -t ${{ matrix.package }}-test-migrations-build:latest .
+      - name: build commander Docker image
+        run: docker build -f ./commander.Dockerfile -t arstotzka-commander:latest .
