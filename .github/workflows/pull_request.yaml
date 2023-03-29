@@ -82,7 +82,7 @@ jobs:
 
     strategy:
       matrix:
-        node: [17.x, 18.x]
+        node: [14.x, 18.x]
 
     services:
       # Label used to access the service container
