@@ -78,13 +78,11 @@ jobs:
   tests:
     name: Run Tests
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:latest
-      options: --user root
+    container: node:16
 
     strategy:
       matrix:
-        node: [18.x]
+        node: [16.x]
 
     services:
       # Label used to access the service container
