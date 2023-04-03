@@ -40,6 +40,12 @@
     "database": "postgres",
     "schema": "locky"
   },
+  "app": {
+    "rotationLockExpiration": 60000,
+    "serviceToActionsUrlMap": {
+      "ingestion": "http://localhost:8083/sync"
+    }
+  },
   "mediator": {
     "timeout": 10000,
     "enableRetryStrategy": false,

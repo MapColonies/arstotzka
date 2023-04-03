@@ -11,7 +11,8 @@ import {
   TreeParent,
   UpdateDateColumn,
 } from 'typeorm';
-import { IService, Parallelism, ServiceType } from '../../models/service';
+import { Parallelism, ServiceType } from '@map-colonies/arstotzka-common';
+import { IService } from '../../models/service';
 import { Namespace } from './namespace';
 import { Rotation } from './rotation';
 import { Block } from './block';

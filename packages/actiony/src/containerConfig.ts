@@ -24,7 +24,7 @@ export const registerExternalValues = async (options?: RegisterOptions): Promise
 
   try {
     const loggerConfig = config.get<LoggerOptions>('telemetry.logger');
-    const logger = jsLogger({ ...loggerConfig, mixin: getOtelMixin(), base: { service: SERVICE_NAME } });
+    const logger = jsLogger({ ...loggerConfig, mixin: getOtelMixin(), base: { component: SERVICE_NAME } });
 
     const mediatorConfig = config.get<MediatorConfig>('mediator');
     const mediator = new Mediator({ ...mediatorConfig, logger: logger.child({ component: 'mediator' }) });

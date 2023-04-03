@@ -14,10 +14,12 @@ export const flattenDetailedService = (service: Required<DetailedService>, child
     createdAt,
     updatedAt,
   } = service;
+
   const { namespaceId, name: namespaceName } = namespace;
+
   const { serviceRotation, parentRotation } = rotations[0];
 
-  const blockees = blocks.map((block) => block.blockeeId);
+  const blockees = blocks.map((block) => ({ serviceId: block.blockeeId, serviceName: block.blockeeService.name }));
 
   return {
     namespaceId,

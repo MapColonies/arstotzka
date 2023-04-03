@@ -85,13 +85,13 @@
       "delay": {
         "__name": "MEDIATOR_RETRY_STRATEGY_DELAY",
         "__format": "number"
-      },
-      "actiony": {
-        "url": "MEDIATOR_ACTIONY_URL"
-      },
-      "locky": {
-        "url": "MEDIATOR_LOCKY_URL"
       }
+    },
+    "actiony": {
+      "url": "MEDIATOR_ACTIONY_URL"
+    },
+    "locky": {
+      "url": "MEDIATOR_LOCKY_URL"
     }
   }
 }

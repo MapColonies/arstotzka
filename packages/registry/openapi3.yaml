@@ -117,17 +117,25 @@ components:
     date:
       type: string
       format: date-time
+    baseService:
+      type: object
+      properties:
+        serviceId:
+          $ref: '#/components/schemas/serviceId'
+        serviceName:
+          $ref: '#/components/schemas/serviceName'
+      required:
+        - serviceId
+        - serviceName
     service:
+      allOf:
+        - $ref: '#/components/schemas/baseService'
       type: object
       properties:
         namespaceId:
           $ref: '#/components/schemas/namespaceId'
         namespaceName:
           $ref: '#/components/schemas/namespaceName'
-        serviceId:
-          $ref: '#/components/schemas/serviceId'
-        serviceName:
-          $ref: '#/components/schemas/serviceName'
         serviceType:
           $ref: '#/components/schemas/serviceType'
         parentRotation:
@@ -145,14 +153,12 @@ components:
         blockees:
           type: array
           items:
-            $ref: '#/components/schemas/serviceId'
+            $ref: '#/components/schemas/baseService'
         createdAt:
           $ref: '#/components/schemas/date'
         updatedAt:
           $ref: '#/components/schemas/date'
       required:
-        - serviceId
-        - serviceName
         - namespaceId
         - namespaceName
         - parallelism

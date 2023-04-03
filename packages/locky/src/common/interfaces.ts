@@ -16,3 +16,8 @@ export interface OpenApiConfig {
   jsonPath: string;
   uiPath: string;
 }
+
+export interface IAppConfig {
+  reserveLockExpiration: number;
+  serviceToActionsUrlMap: Map<string, string>;
+}

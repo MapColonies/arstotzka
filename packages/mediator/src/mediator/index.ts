@@ -16,7 +16,7 @@ import {
 import axios, { AxiosError, AxiosInstance } from 'axios';
 import axiosRetry, { exponentialDelay, IAxiosRetryConfig } from 'axios-retry';
 import { StatusCodes } from 'http-status-codes';
-import { MediatorConfig, MediatorOptions, Remote, RetryStrategy, DEFAULT_RETRY_STRATEGY_DELAY } from './config';
+import { MediatorConfig, MediatorOptions, Remote, RetryStrategy, DEFAULT_RETRY_STRATEGY_DELAY, RemoteOptions } from './config';
 import { ILogger } from './logging';
 
 interface IRegistryMediator {
@@ -30,7 +30,7 @@ interface ILockyMediator {
 }
 
 interface IActionyMediator {
-  filterActions: (filter: ActionFilter) => Promise<Action[]>;
+  filterActions: <T = Action, F extends object = ActionFilter>(filter: F, overrideRemote?: RemoteOptions) => Promise<T[]>;
   createAction: (params: ActionParams) => Promise<{ actionId: string }>;
   updateAction: (actionId: string, params: UpdatableActionParams) => Promise<void>;
 }
@@ -141,7 +141,7 @@ export class Mediator implements IMediator {
     this.logger?.debug({ msg: `reserving access on ${Remote.LOCKY}`, serviceId, remote: { name: Remote.LOCKY, ...remote } });
 
     try {
-      const res = await this.client.post<{ lockId: string } | undefined>(`${remote.url}/lock/reserve`, undefined, { params: { serviceId } });
+      const res = await this.client.post<{ lockId: string } | undefined>(`${remote.url}/lock/reserve`, undefined, { params: { service: serviceId } });
       return res.data;
     } catch (error) {
       const axiosError = error as AxiosError;
@@ -163,31 +163,59 @@ export class Mediator implements IMediator {
     }
   }
 
-  public async filterActions(filter: ActionFilter): Promise<Action[]> {
-    const remote = this.config[Remote.ACTIONY];
+  public async filterActions<T = Action, F extends object = ActionFilter>(filter: F, overrideRemote?: RemoteOptions): Promise<T[]> {
+    const remote = overrideRemote ?? this.config[Remote.ACTIONY];
+    const remoteName = overrideRemote ? 'override' : Remote.ACTIONY;
 
     if (remote === undefined) {
       throw new Error(`remote ${Remote.ACTIONY} is not configured`);
     }
 
-    this.logger?.debug({ msg: `getting actions from ${Remote.ACTIONY}`, filter, remote: { name: Remote.ACTIONY, ...remote } });
+    this.logger?.debug({ msg: `getting actions from ${remoteName}`, filter, remote: { name: remoteName, ...remote } });
 
     try {
-      const res = await this.client.get<Action[]>(`${remote.url}/action`, { params: filter });
+      const url = overrideRemote?.url ?? `${remote.url}/action`;
+      const res = await this.client.get<T[]>(url, { params: filter });
       return res.data;
     } catch (error) {
       const axiosError = error as AxiosError;
 
       this.logger?.error({
-        msg: `failed to get actions from ${Remote.ACTIONY}`,
+        msg: `failed to get actions from ${remoteName}`,
         filter,
         err: axiosError,
-        remote: { name: Remote.ACTIONY, ...remote },
+        remote: { name: remoteName, ...remote },
       });
 
       throw axiosError;
     }
   }
+
+  // public async filterActions(filter: ActionFilter): Promise<Action[]> {
+  //   const remote = this.config[Remote.ACTIONY];
+
+  //   if (remote === undefined) {
+  //     throw new Error(`remote ${Remote.ACTIONY} is not configured`);
+  //   }
+
+  //   this.logger?.debug({ msg: `getting actions from ${Remote.ACTIONY}`, filter, remote: { name: Remote.ACTIONY, ...remote } });
+
+  //   try {
+  //     const res = await this.client.get<Action[]>(`${remote.url}/action`, { params: filter });
+  //     return res.data;
+  //   } catch (error) {
+  //     const axiosError = error as AxiosError;
+
+  //     this.logger?.error({
+  //       msg: `failed to get actions from ${Remote.ACTIONY}`,
+  //       filter,
+  //       err: axiosError,
+  //       remote: { name: Remote.ACTIONY, ...remote },
+  //     });
+
+  //     throw axiosError;
+  //   }
+  // }
 
   public async createAction(params: ActionParams): Promise<{ actionId: string }> {
     const remote = this.config[Remote.ACTIONY];

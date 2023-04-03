@@ -13,6 +13,7 @@ import { HEALTHCHECK, ON_SIGNAL, SERVICES, SERVICE_NAME } from './common/constan
 import { InjectionObject, registerDependencies } from './common/dependencyRegistration';
 import { lockRepositoryFactory, LOCK_REPOSITORY_SYMBOL } from './lock/DAL/typeorm/lockRepository';
 import { lockRouterFactory, LOCK_ROUTER_SYMBOL } from './lock/routes/lockRouter';
+import { IAppConfig } from './common/interfaces';
 
 export interface RegisterOptions {
   override?: InjectionObject<unknown>[];
@@ -24,7 +25,9 @@ export const registerExternalValues = async (options?: RegisterOptions): Promise
 
   try {
     const loggerConfig = config.get<LoggerOptions>('telemetry.logger');
-    const logger = jsLogger({ ...loggerConfig, mixin: getOtelMixin(), base: { service: SERVICE_NAME } });
+    const logger = jsLogger({ ...loggerConfig, mixin: getOtelMixin(), base: { component: SERVICE_NAME } });
+
+    const appConfig = config.get<IAppConfig>('app');
 
     const mediatorConfig = config.get<MediatorConfig>('mediator');
     const mediator = new Mediator({ ...mediatorConfig, logger: logger.child({ component: 'mediator' }) });
@@ -40,6 +43,7 @@ export const registerExternalValues = async (options?: RegisterOptions): Promise
       { token: SERVICES.CONFIG, provider: { useValue: config } },
       { token: SERVICES.LOGGER, provider: { useValue: logger } },
       { token: SERVICES.TRACER, provider: { useValue: tracer } },
+      { token: SERVICES.APP, provider: { useValue: appConfig } },
       { token: SERVICES.MEDIATOR, provider: { useValue: mediator } },
       { token: LOCK_ROUTER_SYMBOL, provider: { useFactory: lockRouterFactory } },
       {

@@ -47,7 +47,11 @@ const createServiceRepository = (dataSource: DataSource) => {
       return treeRepository.findDescendants(service, { depth, relations: [] });
     },
     async findBlocks(id: string): Promise<BlockEntity[]> {
-      return this.manager.createQueryBuilder(BlockEntity, 'block').where('block.blocker_id = :id', { id }).getMany();
+      return this.manager
+        .createQueryBuilder(BlockEntity, 'block')
+        .leftJoinAndSelect('block.blockeeService', 'blockee')
+        .where('block.blocker_id = :id', { id })
+        .getMany();
     },
     async createServiceRotation(id: string): Promise<RotationCreationResult[]> {
       const service = (await this.findOneBy({ id })) as ServiceEntity;

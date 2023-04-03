@@ -1,12 +1,12 @@
 import { ILogger } from './logging';
 
-interface RemoteOptions {
-  url: string;
-}
-
 type MediatorRemotesConfig = {
   [key in Remote]?: RemoteOptions;
 };
+
+export interface RemoteOptions {
+  url: string;
+}
 
 export enum Remote {
   REGISTRY = 'registry',

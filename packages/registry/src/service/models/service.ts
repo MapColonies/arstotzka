@@ -1,17 +1,8 @@
+import { Parallelism, ServiceType } from '@map-colonies/arstotzka-common';
+
 interface IDbEntity {
   createdAt: Date;
   updatedAt: Date;
-}
-
-export enum Parallelism {
-  SINGLE = 'single',
-  REPLACEABLE = 'replaceable',
-  MULTIPLE = 'multiple',
-}
-
-export enum ServiceType {
-  PRODUCER = 'producer',
-  CONSUMER = 'consumer',
 }
 
 export interface INamespace extends IDbEntity {
@@ -39,26 +30,12 @@ export interface IRotation extends IDbEntity {
 export interface IBlock {
   blockerId: string;
   blockeeId: string;
+  blockeeService?: IService;
+  blockerService?: IService;
 }
 
 export interface DetailedService extends IService {
   namespace?: INamespace;
   rotations?: IRotation[];
-  blocks?: IBlock[];
-}
-
-export interface FlattedDetailedService {
-  namespaceId: number;
-  namespaceName: string;
-  serviceId: string;
-  serviceName: string;
-  serviceType: ServiceType;
-  serviceRotation: number;
-  parallelism: Parallelism;
-  parent: string | null;
-  parentRotation: number | null;
-  children: string[];
-  blockees: string[];
-  createdAt: Date;
-  updatedAt: Date;
+  blocks?: Required<IBlock>[];
 }

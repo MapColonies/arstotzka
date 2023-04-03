@@ -20,7 +20,7 @@ export interface FlattedDetailedService {
   parent: string | null;
   parentRotation: number | null;
   children: string[];
-  blockees: string[];
+  blockees: { serviceId: string; serviceName: string }[];
   createdAt: Date;
   updatedAt: Date;
 }

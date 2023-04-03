@@ -60,6 +60,15 @@
     "database": "DB_NAME",
     "schema": "DB_SCHEMA"
   },
+  "app": {
+    "rotationLockExpiration": {
+      "__name": "APP_ROTATION_LOCK_EXPIRATION",
+      "__format": "number"
+    },
+    "serviceToActionsUrlMap": {
+      "ingestion": "APP_INGESTION_ACTIONS_URL"
+    }
+  },
   "mediator": {
     "timeout": {
       "__name": "MEDIATOR_TIMEOUT",

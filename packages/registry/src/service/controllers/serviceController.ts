@@ -2,12 +2,11 @@ import { Logger } from '@map-colonies/js-logger';
 import { RequestHandler } from 'express';
 import httpStatus, { StatusCodes } from 'http-status-codes';
 import { injectable, inject } from 'tsyringe';
-import { ServiceNotFoundError, ServiceAlreadyLockedError } from '@map-colonies/arstotzka-common';
+import { ServiceNotFoundError, ServiceAlreadyLockedError, FlattedDetailedService } from '@map-colonies/arstotzka-common';
 import { HttpError } from '../../common/errors';
 import { SERVICES } from '../../common/constants';
 import { ServiceManager } from '../models/serviceManager';
 import { ServiceIsActiveError } from '../models/errors';
-import { FlattedDetailedService } from '../models/service';
 
 type GetServiceHandler = RequestHandler<{ serviceId: string }, FlattedDetailedService>;
 type RotateServiceHandler = RequestHandler<{ serviceId: string }>;

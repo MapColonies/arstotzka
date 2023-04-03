@@ -37,8 +37,8 @@
   },
   "dependencies": {
     "@godaddy/terminus": "^4.11.1",
-    "@map-colonies/arstotzka-common": "^0.0.1-alpha.0",
-    "@map-colonies/arstotzka-mediator": "^0.0.1-alpha.0",
+    "@map-colonies/arstotzka-common": "*",
+    "@map-colonies/arstotzka-mediator": "*",
     "@map-colonies/cleanup-registry": "^1.1.0",
     "@map-colonies/error-express-handler": "^2.1.0",
     "@map-colonies/express-access-log-middleware": "^1.0.0",

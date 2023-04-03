@@ -3,18 +3,18 @@ import { inject, injectable } from 'tsyringe';
 import { IMediator } from '@map-colonies/arstotzka-mediator';
 import { ActionStatus, LockNotFoundError, LockRequest, ServiceAlreadyLockedError } from '@map-colonies/arstotzka-common';
 import { SERVICES } from '../../common/constants';
+import { IAppConfig } from '../../common/interfaces';
 import { LockRepository, LOCK_REPOSITORY_SYMBOL } from '../DAL/typeorm/lockRepository';
 import { ActiveBlockingActionsError } from './errors';
 import { LockId } from './lock';
-
-const SERVICE_RESERVATION_LOCK_EXPIRATION = 60000;
 
 @injectable()
 export class LockManager {
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(LOCK_REPOSITORY_SYMBOL) private readonly lockRepository: LockRepository,
-    @inject(SERVICES.MEDIATOR) private readonly mediator: IMediator
+    @inject(SERVICES.MEDIATOR) private readonly mediator: IMediator,
+    @inject(SERVICES.APP) private readonly app: IAppConfig
   ) {}
 
   public async lock(lockRequest: LockRequest): Promise<LockId> {
@@ -71,18 +71,27 @@ export class LockManager {
 
     // lock blockees services
     const lockId = await this.lockRepository.createLock({
-      services: service.blockees,
-      expiration: SERVICE_RESERVATION_LOCK_EXPIRATION,
+      services: service.blockees.map((blockee) => blockee.serviceId),
+      expiration: this.app.reserveLockExpiration,
       reason: `${serviceId} access reserve`,
     });
 
     try {
       // for each of the blocking services get the active actions and expect none, if there are unlock the created locks and throw
-      const filterActionPromises = service.blockees.map(async (blockeeId) => {
-        const actions = await this.mediator.filterActions({ service: blockeeId, status: [ActionStatus.ACTIVE], limit: 1 });
+      const filterActionPromises = service.blockees.map(async (blockee) => {
+        let actions: unknown[] = [];
+
+        if (this.app.serviceToActionsUrlMap.has(blockee.serviceName)) {
+          actions = await this.mediator.filterActions<{ id: string }, { status: 'inprogress' }>(
+            { status: 'inprogress' },
+            { url: this.app.serviceToActionsUrlMap.get(blockee.serviceName) as string }
+          );
+        } else {
+          actions = await this.mediator.filterActions({ service: blockee.serviceId, status: [ActionStatus.ACTIVE], limit: 1 });
+        }
 
         if (actions.length > 0) {
-          this.logger.error({ msg: 'found active actions on blockee service', serviceId, blockeeId, actions });
+          this.logger.error({ msg: 'found active actions on blockee service', serviceId, blockee, actions });
           throw new ActiveBlockingActionsError('could not reserve access for service due to active blocking actions');
         }
       });
