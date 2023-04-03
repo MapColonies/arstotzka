@@ -1,6 +1,6 @@
 {
   "name": "@map-colonies/arstotzka-common",
-  "version": "0.0.1-alpha.0",
+  "version": "0.0.1-alpha.1",
   "description": "arstotzka common",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
