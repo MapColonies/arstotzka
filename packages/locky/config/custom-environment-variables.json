@@ -61,8 +61,8 @@
     "schema": "DB_SCHEMA"
   },
   "app": {
-    "rotationLockExpiration": {
-      "__name": "APP_ROTATION_LOCK_EXPIRATION",
+    "reserveLockExpiration": {
+      "__name": "APP_RESERVE_LOCK_EXPIRATION",
       "__format": "number"
     },
     "serviceToActionsUrlMap": {

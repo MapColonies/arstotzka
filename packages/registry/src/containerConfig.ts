@@ -27,7 +27,7 @@ export const registerExternalValues = async (options?: RegisterOptions): Promise
     const loggerConfig = config.get<LoggerOptions>('telemetry.logger');
     const logger = jsLogger({ ...loggerConfig, mixin: getOtelMixin(), base: { component: SERVICE_NAME } });
 
-    const app = config.get<IAppConfig>('app');
+    const appConfig = config.get<IAppConfig>('app');
 
     const mediatorConfig = config.get<MediatorConfig>('mediator');
     const mediator = new Mediator({ ...mediatorConfig, logger: logger.child({ component: 'mediator' }) });
@@ -43,7 +43,7 @@ export const registerExternalValues = async (options?: RegisterOptions): Promise
       { token: SERVICES.CONFIG, provider: { useValue: config } },
       { token: SERVICES.LOGGER, provider: { useValue: logger } },
       { token: SERVICES.TRACER, provider: { useValue: tracer } },
-      { token: SERVICES.APP, provider: { useValue: app } },
+      { token: SERVICES.APP, provider: { useValue: appConfig } },
       { token: SERVICES.MEDIATOR, provider: { useValue: mediator } },
       { token: SERVICE_ROUTER_SYMBOL, provider: { useFactory: serviceRouterFactory } },
       {

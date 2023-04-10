@@ -40,6 +40,12 @@
     "database": "postgres",
     "schema": "registry"
   },
+  "app": {
+    "rotationLockExpiration": 60000,
+    "serviceToActionsUrlMap": {
+      "ingestion": "http://osm-sync-tracker.com/sync"
+    }
+  },
   "mediator": {
     "timeout": 10000,
     "enableRetryStrategy": false,

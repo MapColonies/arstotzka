@@ -41,9 +41,9 @@
     "schema": "locky"
   },
   "app": {
-    "rotationLockExpiration": 60000,
+    "reserveLockExpiration": 60000,
     "serviceToActionsUrlMap": {
-      "ingestion": "http://localhost:8083/sync"
+      "ingestion": "http://osm-sync-tracker.com/sync"
     }
   },
   "mediator": {
