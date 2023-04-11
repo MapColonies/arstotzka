@@ -32,7 +32,7 @@ interface ILockyMediator {
 interface IActionyMediator {
   filterActions: <T = Action, F extends object = ActionFilter>(filter: F, overrideRemote?: RemoteOptions) => Promise<T[]>;
   createAction: (params: ActionParams) => Promise<{ actionId: string }>;
-  updateAction: (actionId: string, params: UpdatableActionParams) => Promise<void>;
+  updateAction: (params: UpdatableActionParams, actionId: string) => Promise<void>;
 }
 
 export type IMediator = IRegistryMediator & ILockyMediator & IActionyMediator;
@@ -191,32 +191,6 @@ export class Mediator implements IMediator {
     }
   }
 
-  // public async filterActions(filter: ActionFilter): Promise<Action[]> {
-  //   const remote = this.config[Remote.ACTIONY];
-
-  //   if (remote === undefined) {
-  //     throw new Error(`remote ${Remote.ACTIONY} is not configured`);
-  //   }
-
-  //   this.logger?.debug({ msg: `getting actions from ${Remote.ACTIONY}`, filter, remote: { name: Remote.ACTIONY, ...remote } });
-
-  //   try {
-  //     const res = await this.client.get<Action[]>(`${remote.url}/action`, { params: filter });
-  //     return res.data;
-  //   } catch (error) {
-  //     const axiosError = error as AxiosError;
-
-  //     this.logger?.error({
-  //       msg: `failed to get actions from ${Remote.ACTIONY}`,
-  //       filter,
-  //       err: axiosError,
-  //       remote: { name: Remote.ACTIONY, ...remote },
-  //     });
-
-  //     throw axiosError;
-  //   }
-  // }
-
   public async createAction(params: ActionParams): Promise<{ actionId: string }> {
     const remote = this.config[Remote.ACTIONY];
 
@@ -244,14 +218,14 @@ export class Mediator implements IMediator {
     }
   }
 
-  public async updateAction(actionId: string, params: UpdatableActionParams): Promise<void> {
+  public async updateAction(params: UpdatableActionParams, actionId: string): Promise<void> {
     const remote = this.config[Remote.ACTIONY];
 
     if (remote === undefined) {
       throw new Error(`remote ${Remote.ACTIONY} is not configured`);
     }
 
-    this.logger?.debug({ msg: `posting action to ${Remote.ACTIONY}`, params, remote: { name: Remote.ACTIONY, ...remote } });
+    this.logger?.debug({ msg: `patching action on ${Remote.ACTIONY}`, params, remote: { name: Remote.ACTIONY, ...remote } });
 
     try {
       await this.client.patch(`${remote.url}/action/${actionId}`, params);
