@@ -1,6 +1,6 @@
 {
   "db": {
-    "host": "postgres",
+    "host": "localhost",
     "schema": "registry",
     "username": "postgres",
     "password": "1234",
