@@ -78,11 +78,10 @@ jobs:
   tests:
     name: Run Tests
     runs-on: ubuntu-latest
-    container: node:16
 
     strategy:
       matrix:
-        node: [18.x]
+        node: [16.x, 18.x]
 
     services:
       # Label used to access the service container
@@ -111,6 +110,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
+          cache: npm
 
       - name: Install Node.js dependencies
         run: npm ci
@@ -127,7 +127,7 @@ jobs:
           apt-get install -y postgresql-client
 
       - name: Create schema
-        run: psql -h postgres -d postgres -U postgres -c 'CREATE SCHEMA actiony; CREATE SCHEMA locky; CREATE SCHEMA registry;'
+        run: psql -h localhost -d postgres -U postgres -c 'CREATE SCHEMA actiony; CREATE SCHEMA locky; CREATE SCHEMA registry;'
         env:
           PGPASSWORD: 1234
 
