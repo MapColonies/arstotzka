@@ -14,6 +14,7 @@ import {
   Sort,
   UpdatableActionParams,
 } from '@map-colonies/arstotzka-common';
+import { serializeError } from 'serialize-error';
 import { ActionRepository, ACTION_REPOSITORY_SYMBOL } from '../../../src/action/DAL/typeorm/actionRepository';
 import { getApp } from '../../../src/app';
 import { SERVICES } from '../../../src/common/constants';
@@ -388,7 +389,8 @@ describe('action', function () {
 
       it('should return 200 and update the relevant action status and metadata', async function () {
         const createdMetadata = { k1: 'v1', k2: 'v2' };
-        const patchedMetadata = { k1: 'patched', k3: 'added' };
+        const patchedMetadata = { k1: 'patched', k2: 'v2', k3: 'added', k4: 4 };
+
         const params = generateActionParams({ metadata: createdMetadata });
         const service = generateGetServiceResponse({ serviceId: params.serviceId });
         fetchServiceMock.mockResolvedValue(service);
@@ -409,6 +411,59 @@ describe('action', function () {
         action = await actionRepository.findOneBy({ actionId });
         expect(action).toHaveProperty('status', ActionStatus.COMPLETED);
         expect(action).toHaveProperty('metadata', patchedMetadata);
+      });
+
+      it('should return 200 and update the relevant action status and metadata on a failure', async function () {
+        const createdMetadata = { k1: 'v1', k2: 'v2' };
+        const error = new Error('some error');
+
+        const expectedMetadata = { ...createdMetadata, ...serializeError(error) };
+
+        const params = generateActionParams({ metadata: createdMetadata });
+        const service = generateGetServiceResponse({ serviceId: params.serviceId });
+        fetchServiceMock.mockResolvedValue(service);
+
+        const postActionRes = await requestSender.postAction(params);
+        expect(postActionRes.status).toBe(httpStatusCodes.CREATED);
+        const actionId = (postActionRes.body as { actionId: string }).actionId;
+
+        // validate the action metadata is createdMetadata
+        let action = await actionRepository.findOneBy({ actionId });
+        expect(action).toHaveProperty('status', ActionStatus.ACTIVE);
+        expect(action).toHaveProperty('metadata', createdMetadata);
+
+        const response = await requestSender.patchAction(actionId, { status: ActionStatus.FAILED, metadata: serializeError(error) });
+        expect(response.status).toBe(httpStatusCodes.OK);
+
+        // validate the action metadata is patchedMetadata
+        action = await actionRepository.findOneBy({ actionId });
+        expect(action).toHaveProperty('status', ActionStatus.FAILED);
+        expect(action).toHaveProperty('metadata', expectedMetadata);
+      });
+
+      it('should return 200 and update the relevant action status even if no metadata is passed', async function () {
+        const createdMetadata = { k1: 'v1', k2: 'v2' };
+
+        const params = generateActionParams({ metadata: createdMetadata });
+        const service = generateGetServiceResponse({ serviceId: params.serviceId });
+        fetchServiceMock.mockResolvedValue(service);
+
+        const postActionRes = await requestSender.postAction(params);
+        expect(postActionRes.status).toBe(httpStatusCodes.CREATED);
+        const actionId = (postActionRes.body as { actionId: string }).actionId;
+
+        // validate the action metadata is createdMetadata
+        let action = await actionRepository.findOneBy({ actionId });
+        expect(action).toHaveProperty('status', ActionStatus.ACTIVE);
+        expect(action).toHaveProperty('metadata', createdMetadata);
+
+        const response = await requestSender.patchAction(actionId, { status: ActionStatus.COMPLETED });
+        expect(response.status).toBe(httpStatusCodes.OK);
+
+        // validate the action metadata is patchedMetadata
+        action = await actionRepository.findOneBy({ actionId });
+        expect(action).toHaveProperty('status', ActionStatus.COMPLETED);
+        expect(action).toHaveProperty('metadata', createdMetadata);
       });
     });
 

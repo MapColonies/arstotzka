@@ -81,7 +81,7 @@ export class ActionManager {
 
     this.logger.info({ msg: 'updating action with the follwing params', actionId, params: updateParams });
 
-    await this.actionRepository.updateOneAction(actionId, updateParams);
+    await this.actionRepository.updateOneAction(actionId, { ...updateParams, metadata: { ...action.metadata, ...updateParams.metadata } });
   }
 
   private async validateParallelism(service: FlattedDetailedService): Promise<void> {
