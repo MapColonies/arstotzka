@@ -16,6 +16,7 @@ import {
 import axios, { AxiosError, AxiosInstance } from 'axios';
 import axiosRetry, { exponentialDelay, IAxiosRetryConfig } from 'axios-retry';
 import { StatusCodes } from 'http-status-codes';
+import { serializeError } from 'serialize-error';
 import { MediatorConfig, MediatorOptions, Remote, RetryStrategy, DEFAULT_RETRY_STRATEGY_DELAY, RemoteOptions } from './config';
 import { ILogger } from './logging';
 
@@ -228,7 +229,7 @@ export class Mediator implements IMediator {
     this.logger?.debug({ msg: `patching action on ${Remote.ACTIONY}`, params, remote: { name: Remote.ACTIONY, ...remote } });
 
     try {
-      await this.client.patch(`${remote.url}/action/${actionId}`, params);
+      await this.client.patch(`${remote.url}/action/${actionId}`, { ...params, metadata: serializeError(params.metadata) });
     } catch (error) {
       const axiosError = error as AxiosError;
 
