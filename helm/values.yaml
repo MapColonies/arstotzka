@@ -1,0 +1,299 @@
+environment: &environment development
+
+cloudProviderFlavor: &cloudProviderFlavor openshift
+dockerRegistryUrl: &dockerRegistryUrl my-registry-url.io
+imagePullSecretName: &imagePullSecretName 'my-registry-secret'
+
+caSecretName: &caSecretName ''
+caPath: &caPath '/usr/local/share/ca-certificates'
+caKey: &caKey 'ca.crt'
+
+networkCM: &networkCM arstotzka-network-configmap
+
+dbConfig:
+  host: &dbConfigHost localhost
+  username: &dbConfigUsername postgres
+  password: &dbConfigPassword postgres
+  database: &dbConfigDatabase arstotzka
+  port: &dbConfigPort 5432
+  sslAuth:
+    enabled: &dbConfigSslAuthEnabled false
+    secretName: &dbConfigSslAuthSecretName secret-name
+    certFileName: &dbConfigSslAuthCertFileName postgresql.crt
+    keyFileName: &dbConfigSslAuthKeyFileName postgresql.key
+    caFileName: &dbConfigSslAuthCaFileName root.crt
+
+network:
+  actiony:
+    url: http://arstotzka-actiony:8080
+  locky:
+    url: http://arstotzka-locky:8080
+  registry:
+    url: http://arstotzka-registry:8080
+  ingestion:
+    url: http://ingestion-osm-sync-tracker:8080/sync
+
+actiony:
+  enabled: true
+  environment: *environment
+  replicaCount: 1
+  initialDelaySeconds: 600
+
+  annotations: {}
+  podAnnotations: {}
+
+  cloudProvider:
+    flavor: *cloudProviderFlavor
+    dockerRegistryUrl: *dockerRegistryUrl
+    imagePullSecretName: *imagePullSecretName
+
+  caSecretName: *caSecretName
+  caPath: *caPath
+  caKey: *caKey
+
+  image:
+    pullPolicy: Always
+    repository: actiony
+    # Overrides the image tag, default is the chart appVersion.
+    # tag: 'latest'
+
+  env:
+    logLevel: info
+    tracing:
+      enabled: false
+      url: http://localhost:55681/v1/trace
+      ratio: 1
+    metrics:
+      enabled: false
+      url: http://localhost:55681/v1/metrics
+    mediator:
+      timeout: 10000
+      retryStrategy:
+        enabled: false
+        # retries: 3
+        # shouldResetTimeout: false
+        # isExponential: false
+        # delay: 100
+
+  arstotzka:
+    networkCM: *networkCM
+
+  dbConfig:
+    host: *dbConfigHost
+    username: *dbConfigUsername
+    password: *dbConfigPassword
+    database: *dbConfigDatabase
+    schema: actiony
+    port: *dbConfigPort
+    sslAuth:
+      enabled: *dbConfigSslAuthEnabled
+      secretName: *dbConfigSslAuthSecretName
+      certFileName: *dbConfigSslAuthCertFileName
+      keyFileName: *dbConfigSslAuthKeyFileName
+      caFileName: *dbConfigSslAuthCaFileName
+
+  resources:
+    enabled: true
+    value:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+  route:
+    enabled: true
+    path: /
+    timeout:
+      enabled: false # defaults to 30s by openshift
+      duration: 60s # supported units (us, ms, s, m, h, d)
+
+  service: {}
+    # nameOverride: override
+
+  ingress:
+    enabled: false
+    path: /
+    host: 'localhost'
+    cors:
+      enabled: true
+      origin: '*'
+
+locky:
+  enabled: true
+  environment: *environment
+  replicaCount: 1
+  initialDelaySeconds: 600
+
+  annotations: {}
+  podAnnotations: {}
+
+  cloudProvider:
+    flavor: *cloudProviderFlavor
+    dockerRegistryUrl: *dockerRegistryUrl
+    imagePullSecretName: *imagePullSecretName
+
+  caSecretName: *caSecretName
+  caPath: *caPath
+  caKey: *caKey
+
+  image:
+    pullPolicy: Always
+    repository: locky
+    # Overrides the image tag, default is the chart appVersion.
+    # tag: 'latest'
+
+  env:
+    logLevel: info
+    tracing:
+      enabled: false
+      url: http://localhost:55681/v1/trace
+      ratio: 1
+    metrics:
+      enabled: false
+      url: http://localhost:55681/v1/metrics
+    app:
+      reserveLockExpiration: 60000
+    mediator:
+      timeout: 10000
+      retryStrategy:
+        enabled: false
+        # retries: 3
+        # shouldResetTimeout: false
+        # isExponential: false
+        # delay: 100
+
+  arstotzka:
+    networkCM: *networkCM
+
+  dbConfig:
+    host: *dbConfigHost
+    username: *dbConfigUsername
+    password: *dbConfigPassword
+    database: *dbConfigDatabase
+    schema: locky
+    port: *dbConfigPort
+    sslAuth:
+      enabled: *dbConfigSslAuthEnabled
+      secretName: *dbConfigSslAuthSecretName
+      certFileName: *dbConfigSslAuthCertFileName
+      keyFileName: *dbConfigSslAuthKeyFileName
+      caFileName: *dbConfigSslAuthCaFileName
+
+  resources:
+    enabled: true
+    value:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+  route:
+    enabled: true
+    path: /
+    timeout:
+      enabled: false # defaults to 30s by openshift
+      duration: 60s # supported units (us, ms, s, m, h, d)
+
+  service: {}
+    # nameOverride: override
+
+  ingress:
+    enabled: false
+    path: /
+    host: 'localhost'
+    cors:
+      enabled: true
+      origin: '*'
+
+registry:
+  enabled: true
+  environment: *environment
+  replicaCount: 1
+  initialDelaySeconds: 600
+
+  annotations: {}
+  podAnnotations: {}
+
+  cloudProvider:
+    flavor: *cloudProviderFlavor
+    dockerRegistryUrl: *dockerRegistryUrl
+    imagePullSecretName: *imagePullSecretName
+
+  caSecretName: *caSecretName
+  caPath: *caPath
+  caKey: *caKey
+
+  image:
+    pullPolicy: Always
+    repository: registry
+    # Overrides the image tag, default is the chart appVersion.
+    # tag: 'latest'
+
+  env:
+    logLevel: info
+    tracing:
+      enabled: false
+      url: http://localhost:55681/v1/trace
+      ratio: 1
+    metrics:
+      enabled: false
+      url: http://localhost:55681/v1/metrics
+    app:
+      rotationLockExpiration: 60000
+    mediator:
+      timeout: 10000
+      retryStrategy:
+        enabled: false
+        # retries: 3
+        # shouldResetTimeout: false
+        # isExponential: false
+        # delay: 100
+
+  arstotzka:
+    networkCM: *networkCM
+
+  dbConfig:
+    host: *dbConfigHost
+    username: *dbConfigUsername
+    password: *dbConfigPassword
+    database: *dbConfigDatabase
+    schema: registry
+    port: *dbConfigPort
+    sslAuth:
+      enabled: *dbConfigSslAuthEnabled
+      secretName: *dbConfigSslAuthSecretName
+      certFileName: *dbConfigSslAuthCertFileName
+      keyFileName: *dbConfigSslAuthKeyFileName
+      caFileName: *dbConfigSslAuthCaFileName
+
+  resources:
+    enabled: true
+    value:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+  route:
+    enabled: true
+    path: /
+    timeout:
+      enabled: false # defaults to 30s by openshift
+      duration: 60s # supported units (us, ms, s, m, h, d)
+
+  service: {}
+    # nameOverride: override
+
+  ingress:
+    enabled: false
+    path: /
+    host: 'localhost'
+    cors:
+      enabled: true
+      origin: '*'

@@ -1,0 +1,12 @@
+dependencies:
+- name: actiony
+  repository: file://../packages/actiony/helm
+  version: 1.0.0
+- name: locky
+  repository: file://../packages/locky/helm
+  version: 1.0.0
+- name: registry
+  repository: file://../packages/registry/helm
+  version: 1.0.0
+digest: sha256:307670df0e3c436980e265f33ec81074732fa6081f7cfd03f5a5fe7bf9f84b3d
+generated: "2023-04-18T12:42:00.094274439+03:00"

@@ -1,0 +1,14 @@
+apiVersion: v2
+name: arstotzka
+description: A Helm chart for arstotzka
+type: application
+version: 1.0.0
+appVersion: 1.0.0
+
+dependencies:
+  - name: actiony
+    repository: 'file://../packages/actiony/helm'
+  - name: locky
+    repository: 'file://../packages/locky/helm'
+  - name: registry
+    repository: 'file://../packages/registry/helm'

@@ -11,18 +11,26 @@ initialDelaySeconds: 60
 nodePort: 30030 #for minikube deployment only
 resetOnConfigChange: true
 
+annotations: {}
+podAnnotations: {}
+
 cloudProvider:
+  flavor: openshift
   dockerRegistryUrl: my-registry-url.io
   imagePullSecretName: 'my-registry-secret'
-  flavor: openshift
 
 caSecretName: ''
 caPath: '/usr/local/share/ca-certificates'
 caKey: 'ca.crt'
 
 image:
-  repository: ts-server-boilerplate
-  tag: 'latest'
+  pullPolicy: Always
+  repository: registry
+  # Overrides the image tag, default is the chart appVersion.
+  # tag: 'latest'
+
+arstotzka:
+  networkCM: arstotzka-network-configmap
 
 env:
   port: 8080
@@ -35,9 +43,34 @@ env:
   tracing:
     enabled: false
     url: http://localhost:55681/v1/trace
+    ratio: 1
   metrics:
     enabled: false
     url: http://localhost:55681/v1/metrics
+  app:
+    rotationLockExpiration: 60000
+  mediator:
+    timeout: 10000
+    retryStrategy:
+      enabled: false
+      # retries: 3
+      # shouldResetTimeout: false
+      # isExponential: false
+      # delay: 100
+
+dbConfig:
+  host: localhost
+  username: postgres
+  password: postgres
+  database: arstotzka
+  schema: registry
+  port: 5432
+  sslAuth:
+    enabled: false
+    secretName: secret-name
+    certFileName: postgresql.crt
+    keyFileName: postgresql.key
+    caFileName: root.crt
 
 resources:
   enabled: true
@@ -55,6 +88,9 @@ route:
   timeout:
     enabled: false # defaults to 30s by openshift
     duration: 60s # supported units (us, ms, s, m, h, d)
+
+service: {}
+  # nameOverride: override
 
 ingress:
   enabled: false
