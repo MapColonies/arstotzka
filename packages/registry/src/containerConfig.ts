@@ -30,7 +30,7 @@ export const registerExternalValues = async (options?: RegisterOptions): Promise
     const appConfig = config.get<IAppConfig>('app');
 
     const mediatorConfig = config.get<MediatorConfig>('mediator');
-    const mediator = new Mediator({ ...mediatorConfig, logger: logger.child({ component: 'mediator' }) });
+    const mediator = new Mediator({ ...mediatorConfig, logger: logger.child({ subComponent: 'mediator' }) });
 
     cleanupRegistry.on('itemFailed', (id, error, msg) => logger.error({ msg, itemId: id, err: error }));
     cleanupRegistry.on('finished', (status) => logger.info({ msg: `cleanup registry finished cleanup`, status }));
