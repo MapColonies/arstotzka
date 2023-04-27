@@ -1,0 +1,48 @@
+{
+  "name": "main",
+  "services": [
+    {
+      "name": "rendering",
+      "parallelism": "multiple",
+      "serviceType": "consumer",
+      "parent": "osm2pg-rendering",
+      "rotation": 1
+    },
+    {
+      "name": "ingestion",
+      "parallelism": "multiple",
+      "serviceType": "producer",
+      "blockees": ["planet-dumper"],
+      "rotation": 1
+    },
+    {
+      "name": "planet-dumper",
+      "parallelism": "single",
+      "serviceType": "consumer",
+      "parent": "osmdbt",
+      "blockees": ["ingestion", "osmdbt"],
+      "rotation": 1
+    },
+    {
+      "name": "osmdbt",
+      "parallelism": "single",
+      "serviceType": "producer",
+      "blockees": ["planet-dumper"],
+      "rotation": 1
+    },
+    {
+      "name": "osm2pg-rendering",
+      "parallelism": "replaceable",
+      "serviceType": "consumer",
+      "parent": "osmdbt",
+      "rotation": 1
+    },
+    {
+      "name": "osm2pg-query",
+      "parallelism": "replaceable",
+      "serviceType": "consumer",
+      "parent": "osmdbt",
+      "rotation": 1
+    }
+  ]
+}

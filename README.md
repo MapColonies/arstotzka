@@ -15,6 +15,8 @@ docker run -e COMMAND=migration:run -e SCOPES=registry,locky,actiony arstotzka-c
 ```
 
 ## seed
+prepare your namespace seed input file, [see example](packages/registry/namespace-seeder-example.json) and locate it in `$HOME/input.json`
+
 ```
-docker run -e COMMAND=seed -e SCOPES=registry, arstotzka-commander:latest
+docker run -e COMMAND=seed -e SCOPES=registry, -v ~/packages/registry/namespace-seeder-example.json:/root/input.json arstotzka-commander:latest
 ```
