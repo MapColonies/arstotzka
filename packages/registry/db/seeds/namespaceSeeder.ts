@@ -9,6 +9,8 @@ import { Service } from '../../src/service/DAL/typeorm/service';
 import { Block } from '../../src/service/DAL/typeorm/block';
 import { Rotation } from '../../src/service/DAL/typeorm/rotation';
 
+const SEEDER_INPUT_FILE_NAME = 'arstotzka-namespace-seeder.json';
+
 const INITAL_ROTATION_VALUE = 1;
 
 interface ServiceSeedInput {
@@ -25,11 +27,19 @@ interface NamespaceSeederInput {
   services: ServiceSeedInput[];
 }
 
-export default class NamespaceSeeder implements Seeder {
-  public async run(dataSource: DataSource, factoryManager: SeederFactoryManager): Promise<void> {
-    const map: Map<string, Service> = new Map();
+export interface NamespaceSeederOutput {
+  id: number;
+  name: string;
+  services: Map<string, Service & { rotation: number }>;
+}
 
-    const inputContent = await readFile(join(homedir(), 'input.json'), 'utf-8');
+export const SEEDER_INPUT_PATH = join(homedir(), SEEDER_INPUT_FILE_NAME);
+
+export default class NamespaceSeeder implements Seeder {
+  public async run(dataSource: DataSource, factoryManager: SeederFactoryManager): Promise<NamespaceSeederOutput> {
+    const map: Map<string, Service & { rotation: number }> = new Map();
+
+    const inputContent = await readFile(SEEDER_INPUT_PATH, 'utf-8');
     const seedInput = JSON.parse(inputContent) as NamespaceSeederInput;
     let remaining = seedInput.services.length;
 
@@ -58,14 +68,15 @@ export default class NamespaceSeeder implements Seeder {
 
         const parent = seedInput.services.find((s) => s.name === service.parent);
 
+        const serviceRotation = service.rotation ?? INITAL_ROTATION_VALUE;
         await rotationFactory.save({
           service: savedService,
           serviceId: savedService.id,
-          serviceRotation: service.rotation ?? INITAL_ROTATION_VALUE,
+          serviceRotation,
           parentRotation: parent !== undefined ? parent.rotation ?? INITAL_ROTATION_VALUE : null,
         });
 
-        map.set(service.name, savedService);
+        map.set(service.name, { ...savedService, rotation: serviceRotation });
         remaining--;
 
         console.log(`seeded ${service.name}`);
@@ -87,5 +98,7 @@ export default class NamespaceSeeder implements Seeder {
         });
       }
     }
+
+    return { id: namespaceId, name: seedInput.name, services: map };
   }
 }

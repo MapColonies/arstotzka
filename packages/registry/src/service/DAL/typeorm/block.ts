@@ -8,14 +8,14 @@ export class Block implements IBlock {
   @PrimaryColumn({ name: 'blocker_id', type: 'uuid' })
   public blockerId!: string;
 
-  @ManyToOne(() => Service, (service) => service.id)
+  @ManyToOne(() => Service, (service) => service.id, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'blocker_id' })
   public blockerService!: Service;
 
   @PrimaryColumn({ name: 'blockee_id', type: 'uuid' })
   public blockeeId!: string;
 
-  @ManyToOne(() => Service, (service) => service.id)
+  @ManyToOne(() => Service, (service) => service.id, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'blockee_id' })
   public blockeeService!: Service;
 }

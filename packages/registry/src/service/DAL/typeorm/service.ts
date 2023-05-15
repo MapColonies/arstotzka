@@ -26,7 +26,7 @@ export class Service implements IService {
   @Column({ name: 'namespace_id', type: 'integer' })
   public namespaceId!: number;
 
-  @ManyToOne(() => Namespace, (namespace) => namespace.services)
+  @ManyToOne(() => Namespace, (namespace) => namespace.services, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'namespace_id', referencedColumnName: 'namespaceId' })
   public namespace!: Namespace;
 

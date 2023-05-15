@@ -16,7 +16,7 @@ export class Rotation implements IRotation {
   @Column({ name: 'service_id', type: 'uuid' })
   public serviceId!: string;
 
-  @ManyToOne(() => Service, (service) => service.id)
+  @ManyToOne(() => Service, (service) => service.id, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'service_id' })
   public service!: Service;
 
