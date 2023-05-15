@@ -65,6 +65,7 @@ paths:
             the service id who's reserving access
           schema:
             $ref: '#/components/schemas/serviceId'
+          required: true
       responses:
         201:
           description: Created
