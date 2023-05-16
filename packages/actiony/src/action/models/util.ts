@@ -1,6 +1,6 @@
 import { Parallelism } from '@map-colonies/arstotzka-common';
 
-export const parallelismToActiveBarrier = (parallelism: Parallelism): number => {
+export const parallelismToActiveLimitation = (parallelism: Parallelism): number => {
   switch (parallelism) {
     case Parallelism.SINGLE:
       return 0;

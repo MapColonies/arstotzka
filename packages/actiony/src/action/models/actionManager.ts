@@ -16,7 +16,7 @@ import { inject, injectable } from 'tsyringe';
 import { SERVICES } from '../../common/constants';
 import { ActionRepository, ACTION_CLOSED_STATUSES, ACTION_REPOSITORY_SYMBOL } from '../DAL/typeorm/actionRepository';
 import { CreateActionParams } from './action';
-import { parallelismToActiveBarrier } from './util';
+import { parallelismToActiveLimitation } from './util';
 
 @injectable()
 export class ActionManager {
@@ -85,16 +85,16 @@ export class ActionManager {
   }
 
   private async validateParallelism(service: FlattedDetailedService): Promise<void> {
-    if (service.parallelism === Parallelism.MULTIPLE) {
+    const activeLimitation = parallelismToActiveLimitation(service.parallelism);
+
+    if (activeLimitation === Infinity) {
       return;
     }
 
-    const activeBarrier = parallelismToActiveBarrier(service.parallelism);
-
     const activeActions = await this.actionRepository.countActions({ service: service.serviceId, status: [ActionStatus.ACTIVE] });
 
-    if (activeActions > activeBarrier) {
-      this.logger.error({ msg: 'service parallelism mismatch', service, activeActions, activeBarrier });
+    if (activeActions > activeLimitation) {
+      this.logger.error({ msg: 'service parallelism mismatch', service, activeActions, activeLimitation });
       throw new ParallelismMismatchError(`service ${service.serviceId} has mismatched parallelism`);
     }
   }

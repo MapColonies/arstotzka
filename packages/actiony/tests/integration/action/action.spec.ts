@@ -18,7 +18,7 @@ import { serializeError } from 'serialize-error';
 import { ActionRepository, ACTION_REPOSITORY_SYMBOL } from '../../../src/action/DAL/typeorm/actionRepository';
 import { getApp } from '../../../src/app';
 import { SERVICES } from '../../../src/common/constants';
-import { BEFORE_ALL_TIMEOUT, LONG_RUNNING_TEST_TIMEOUT } from '../helpers';
+import { BEFORE_ALL_TIMEOUT } from '../helpers';
 import { ActionRequestSender } from './helpers/requestSender';
 import { generateAction, generateActionParams, generateGetServiceResponse, sortByDate, stringifyAction, stringifyActions } from './helpers';
 
@@ -744,85 +744,92 @@ describe('action', function () {
 
   describe('Sad Path', function () {
     describe('GET /action', function () {
-      it(
-        'should return 500 if the db throws an error',
-        async function () {
-          const queryFailureMock = jest.fn().mockRejectedValue(new QueryFailedError('select *', [], new Error('failed')));
+      it('should return 500 if the db throws an error', async function () {
+        const queryFailureMock = jest.fn().mockRejectedValue(new QueryFailedError('select *', [], new Error('failed')));
 
-          const { app } = await getApp({
-            override: [
-              { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
-              { token: ACTION_REPOSITORY_SYMBOL, provider: { useValue: { findActions: queryFailureMock } } },
-            ],
-          });
-          const mockActionRequestSender = new ActionRequestSender(app);
+        const { app } = await getApp({
+          override: [
+            { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
+            { token: ACTION_REPOSITORY_SYMBOL, provider: { useValue: { findActions: queryFailureMock } } },
+          ],
+        });
+        const mockActionRequestSender = new ActionRequestSender(app);
 
-          const response = await mockActionRequestSender.getActions();
+        const response = await mockActionRequestSender.getActions();
 
-          expect(response.status).toBe(httpStatusCodes.INTERNAL_SERVER_ERROR);
-          expect(response.body).toHaveProperty('message', 'failed');
-        },
-        LONG_RUNNING_TEST_TIMEOUT
-      );
+        expect(response.status).toBe(httpStatusCodes.INTERNAL_SERVER_ERROR);
+        expect(response.body).toHaveProperty('message', 'failed');
+      });
     });
 
     describe('POST /action', function () {
-      it(
-        'should return 500 if the db throws an error',
-        async function () {
-          const queryFailureMock = jest.fn().mockRejectedValue(new QueryFailedError('select *', [], new Error('failed')));
+      it('should return 500 if the db throws an error', async function () {
+        const queryFailureMock = jest.fn().mockRejectedValue(new QueryFailedError('select *', [], new Error('failed')));
 
-          const { app } = await getApp({
-            override: [
-              { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
-              { token: SERVICES.MEDIATOR, provider: { useValue: { fetchService: fetchServiceMock } } },
-              {
-                token: ACTION_REPOSITORY_SYMBOL,
-                provider: { useValue: { createAction: queryFailureMock, findActions: jest.fn().mockResolvedValue([]) } },
-              },
-            ],
-          });
-          const mockActionRequestSender = new ActionRequestSender(app);
+        const { app } = await getApp({
+          override: [
+            { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
+            { token: SERVICES.MEDIATOR, provider: { useValue: { fetchService: fetchServiceMock } } },
+            {
+              token: ACTION_REPOSITORY_SYMBOL,
+              provider: { useValue: { createAction: queryFailureMock, findActions: jest.fn().mockResolvedValue([]) } },
+            },
+          ],
+        });
+        const mockActionRequestSender = new ActionRequestSender(app);
 
-          const params = generateActionParams();
-          const service = generateGetServiceResponse({ serviceId: params.serviceId, parallelism: Parallelism.MULTIPLE });
-          fetchServiceMock.mockResolvedValue(service);
+        const params = generateActionParams();
+        const service = generateGetServiceResponse({ serviceId: params.serviceId, parallelism: Parallelism.MULTIPLE });
+        fetchServiceMock.mockResolvedValue(service);
 
-          const response = await mockActionRequestSender.postAction(params);
+        const response = await mockActionRequestSender.postAction(params);
 
-          expect(response.status).toBe(httpStatusCodes.INTERNAL_SERVER_ERROR);
-          expect(response.body).toHaveProperty('message', 'failed');
-        },
-        LONG_RUNNING_TEST_TIMEOUT
-      );
+        expect(response.status).toBe(httpStatusCodes.INTERNAL_SERVER_ERROR);
+        expect(response.body).toHaveProperty('message', 'failed');
+      });
+
+      it('should return 500 if the mediator throws an error', async function () {
+        const mediatorFailureMock = jest.fn().mockRejectedValue(new Error('mediator failed'));
+
+        const { app } = await getApp({
+          override: [
+            { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
+            { token: SERVICES.MEDIATOR, provider: { useValue: { fetchService: mediatorFailureMock } } },
+          ],
+        });
+        const mockActionRequestSender = new ActionRequestSender(app);
+
+        const params = generateActionParams();
+
+        const response = await mockActionRequestSender.postAction(params);
+
+        expect(response.status).toBe(httpStatusCodes.INTERNAL_SERVER_ERROR);
+        expect(response.body).toHaveProperty('message', 'mediator failed');
+      });
     });
 
     describe('PATCH /action/{actionId}', function () {
-      it(
-        'should return 500 if the db throws an error',
-        async function () {
-          const queryFailureMock = jest.fn().mockRejectedValue(new QueryFailedError('select *', [], new Error('failed')));
+      it('should return 500 if the db throws an error', async function () {
+        const queryFailureMock = jest.fn().mockRejectedValue(new QueryFailedError('select *', [], new Error('failed')));
 
-          const { app } = await getApp({
-            override: [
-              { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
-              {
-                token: ACTION_REPOSITORY_SYMBOL,
-                provider: {
-                  useValue: { findOneActionById: jest.fn().mockResolvedValue({ status: ActionStatus.ACTIVE }), updateOneAction: queryFailureMock },
-                },
+        const { app } = await getApp({
+          override: [
+            { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
+            {
+              token: ACTION_REPOSITORY_SYMBOL,
+              provider: {
+                useValue: { findOneActionById: jest.fn().mockResolvedValue({ status: ActionStatus.ACTIVE }), updateOneAction: queryFailureMock },
               },
-            ],
-          });
-          const mockActionRequestSender = new ActionRequestSender(app);
+            },
+          ],
+        });
+        const mockActionRequestSender = new ActionRequestSender(app);
 
-          const response = await mockActionRequestSender.patchAction(faker.datatype.uuid(), { status: ActionStatus.ACTIVE });
+        const response = await mockActionRequestSender.patchAction(faker.datatype.uuid(), { status: ActionStatus.ACTIVE });
 
-          expect(response.status).toBe(httpStatusCodes.INTERNAL_SERVER_ERROR);
-          expect(response.body).toHaveProperty('message', 'failed');
-        },
-        LONG_RUNNING_TEST_TIMEOUT
-      );
+        expect(response.status).toBe(httpStatusCodes.INTERNAL_SERVER_ERROR);
+        expect(response.body).toHaveProperty('message', 'failed');
+      });
     });
   });
 });
