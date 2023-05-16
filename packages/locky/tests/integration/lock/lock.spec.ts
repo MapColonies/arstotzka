@@ -338,11 +338,13 @@ describe('lock', function () {
       });
 
       it('should return 500 if the mediator throws an error', async function () {
+        const mediatorFailureMock = jest.fn().mockRejectedValue(new Error('mediator failed'));
+
         const { app } = await getApp({
           override: [
             { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
             { token: LOCK_REPOSITORY_SYMBOL, provider: { useValue: { findNonexpiredLocks: jest.fn().mockResolvedValue([]) } } },
-            { token: SERVICES.MEDIATOR, provider: { useValue: { fetchService: jest.fn().mockRejectedValue(new Error()) } } },
+            { token: SERVICES.MEDIATOR, provider: { useValue: { fetchService: mediatorFailureMock } } },
           ],
         });
         const mockLockRequestSender = new LockRequestSender(app);
@@ -350,6 +352,7 @@ describe('lock', function () {
         const response = await mockLockRequestSender.reserveAccess(faker.datatype.uuid());
 
         expect(response.status).toBe(httpStatusCodes.INTERNAL_SERVER_ERROR);
+        expect(response.body).toHaveProperty('message', 'mediator failed');
       });
     });
   });

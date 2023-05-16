@@ -393,7 +393,7 @@ describe('service', function () {
       });
 
       it('should return 500 if the mediator throws an error', async function () {
-        const mediatorFailureMock = jest.fn().mockRejectedValue(new Error('failed'));
+        const mediatorFailureMock = jest.fn().mockRejectedValue(new Error('mediator failed'));
 
         const { app } = await getApp({
           override: [
@@ -401,7 +401,7 @@ describe('service', function () {
             {
               token: SERVICE_REPOSITORY_SYMBOL,
               provider: {
-                useValue: { findOneBy: jest.fn().mockResolvedValue(seeded.get(Ecosystem.OSMDBT)), findDescendants: jest.fn().mockRejectedValue([]) },
+                useValue: { findOneBy: jest.fn().mockResolvedValue(seeded.get(Ecosystem.OSMDBT)), findDescendants: jest.fn().mockResolvedValue([]) },
               },
             },
             { token: SERVICES.MEDIATOR, provider: { useValue: { createLock: mediatorFailureMock } } },
@@ -412,6 +412,7 @@ describe('service', function () {
         const response = await mockServiceRequestSender.rotateService(faker.datatype.uuid());
 
         expect(response.status).toBe(httpStatusCodes.INTERNAL_SERVER_ERROR);
+        expect(response.body).toHaveProperty('message', 'mediator failed');
       });
     });
   });
