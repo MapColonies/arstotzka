@@ -26,6 +26,7 @@ export class StatefulMediator extends Mediator {
       return;
     }
 
+    // TODO: wrap in try catch and ignore not found
     await super.removeLock(this.lockId.lockId);
     this.lockId = undefined;
   }

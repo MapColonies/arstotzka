@@ -6,7 +6,7 @@ import { MockUrl } from './helpers';
 
 const SERVICE_ID = 'serviceId';
 
-describe('statefulMediator', () => {
+describe('StatefulMediator', () => {
   let statefulMediator: StatefulMediator;
   let postSpy: jest.SpyInstance<unknown>;
   let patchSpy: jest.SpyInstance<unknown>;
@@ -27,7 +27,7 @@ describe('statefulMediator', () => {
     deleteSpy = jest.spyOn(statefulMediator['client'], 'delete');
   });
 
-  describe('flow', () => {
+  describe('#flow', () => {
     it('should mediate statefully on a service who has blockees', async function () {
       const lock = { lockId: 'lockId' };
       const actionId = { actionId: 'actionId' };

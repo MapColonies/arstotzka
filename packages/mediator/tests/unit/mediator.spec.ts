@@ -18,7 +18,7 @@ import { Mediator } from '../../src';
 import { Remote } from '../../src/mediator/config';
 import { MockUrl } from './helpers';
 
-describe('mediator', () => {
+describe('Mediator', () => {
   let mediator: Mediator;
   let getSpy: jest.SpyInstance<unknown>;
   let postSpy: jest.SpyInstance<unknown>;
@@ -38,7 +38,7 @@ describe('mediator', () => {
     nock.cleanAll();
   });
 
-  describe('fetchService', () => {
+  describe('#fetchService', () => {
     it('should http get the requested service', async function () {
       const serviceId = 'serviceId';
       const service = { k: 'v' };
@@ -71,7 +71,7 @@ describe('mediator', () => {
     });
   });
 
-  describe('createLock', () => {
+  describe('#createLock', () => {
     it('should http post the lockRequest and return the created lock', async function () {
       const lock = { lockId: 'lockId' };
       const lockRequest: LockRequest = { services: ['serviceId'], expiration: 100, reason: 'reason' };
@@ -104,7 +104,7 @@ describe('mediator', () => {
     });
   });
 
-  describe('removeLock', () => {
+  describe('#removeLock', () => {
     it('should http delete the lock id', async function () {
       const lockId = 'lockId';
       nock(MockUrl.LOCKY).delete(`/lock/${lockId}`).reply(HttpStatusCode.NoContent);
@@ -134,7 +134,7 @@ describe('mediator', () => {
     });
   });
 
-  describe('reserveAccess', () => {
+  describe('#reserveAccess', () => {
     it('should http post the service to be reserved and return the created lock', async function () {
       const serviceId = 'serviceId';
       const lock = { lockId: 'lockId' };
@@ -177,7 +177,7 @@ describe('mediator', () => {
     });
   });
 
-  describe('filterActions', () => {
+  describe('#filterActions', () => {
     it('should http get actions according to filter from actiony', async function () {
       const serviceId = 'serviceId';
       const filter: ActionFilter = { service: serviceId, limit: 3, sort: 'desc' };
@@ -225,7 +225,7 @@ describe('mediator', () => {
     });
   });
 
-  describe('createAction', () => {
+  describe('#createAction', () => {
     it('should http post action with given params', async function () {
       const actionId = { actionId: 'actionId' };
       const params: ActionParams = { serviceId: 'serviceId', state: 1 };
@@ -268,7 +268,7 @@ describe('mediator', () => {
     });
   });
 
-  describe('updateAction', () => {
+  describe('#updateAction', () => {
     it('should http patch params of provided actionId', async function () {
       const actionId = 'actionId';
       const params: UpdatableActionParams = { status: ActionStatus.COMPLETED };
@@ -312,7 +312,7 @@ describe('mediator', () => {
     });
   });
 
-  describe('configuration', () => {
+  describe('#configuration', () => {
     it('should throw an error if misconfigured for mediation', async function () {
       const misconfiguredError = (remote: Remote) => new Error(`remote ${remote} is not configured`);
 
