@@ -31,6 +31,7 @@ export class ServiceManager {
     const descendantTree = (await this.serviceRepository.findDescendants(service, true, 1)) as Service;
 
     service.blocks = await this.serviceRepository.findBlocks(service.id);
+
     return flattenDetailedService(
       service,
       descendantTree.children.map((children) => children.id)
@@ -77,6 +78,7 @@ export class ServiceManager {
         }
 
         if (actions.length > 0) {
+          console.log('avi');
           this.logger.error({ msg: `service ${descendant.id} has active actions`, descendant });
           throw new ServiceIsActiveError(`service ${descendant.id} has active actions`);
         }
