@@ -59,7 +59,7 @@ export class LockManager {
       throw new ServiceAlreadyLockedError('could not reserve access for service due to nonexpired locks');
     }
 
-    // get the service from the registry ,this validates the service really exists and gets its blockees
+    // get the service from the registry, this validates the service really exists and gets its blockees
     const service = await this.mediator.fetchService(serviceId);
 
     this.logger.debug({ msg: 'fetched service', serviceId, service });
