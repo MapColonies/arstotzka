@@ -157,7 +157,7 @@ describe('ServiceManager', () => {
       createServiceRotationMock.mockResolvedValue([]);
       filterActionsMock.mockResolvedValue([]);
 
-      await expect(serviceManager.rotate(service.id)).resolves.toBeUndefined();
+      await expect(serviceManager.rotate({ serviceId: service.id })).resolves.toBeUndefined();
 
       expect(findOneByMock).toHaveBeenCalledTimes(1);
       expect(findDescendantsMock).toHaveBeenCalledTimes(1);
@@ -173,11 +173,12 @@ describe('ServiceManager', () => {
         reason: `service ${service.id} rotation`,
       });
       expect(filterActionsMock).toHaveBeenCalledWith({ service: service.id, status: [ActionStatus.ACTIVE], limit: 1 });
-      expect(createServiceRotationMock).toHaveBeenCalledWith(service.id);
+      expect(createServiceRotationMock).toHaveBeenCalledWith({ serviceId: service.id });
       expect(removeLockMock).toHaveBeenCalledWith(lock.lockId);
     });
 
     it('should rotate a service who has children', async () => {
+      const description = 'd1';
       const [service] = generateService();
       const [child1] = generateService({ parentServiceId: service.id });
       const [child2] = generateService({ parentServiceId: service.id });
@@ -188,7 +189,7 @@ describe('ServiceManager', () => {
       createServiceRotationMock.mockResolvedValue([]);
       filterActionsMock.mockResolvedValue([]);
 
-      await expect(serviceManager.rotate(service.id)).resolves.toBeUndefined();
+      await expect(serviceManager.rotate({ serviceId: service.id, description })).resolves.toBeUndefined();
 
       expect(findOneByMock).toHaveBeenCalledTimes(1);
       expect(findDescendantsMock).toHaveBeenCalledTimes(1);
@@ -204,7 +205,7 @@ describe('ServiceManager', () => {
         reason: `service ${service.id} rotation`,
       });
       expect(filterActionsMock).toHaveBeenNthCalledWith(1, { service: service.id, status: [ActionStatus.ACTIVE], limit: 1 });
-      expect(createServiceRotationMock).toHaveBeenCalledWith(service.id);
+      expect(createServiceRotationMock).toHaveBeenCalledWith({ serviceId: service.id, description });
       expect(removeLockMock).toHaveBeenCalledWith(lock.lockId);
     });
 
@@ -222,7 +223,7 @@ describe('ServiceManager', () => {
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([{ actionId: 'actionId' }]);
 
-      await expect(serviceManager.rotate(service.id)).rejects.toThrow(expectedError);
+      await expect(serviceManager.rotate({ serviceId: service.id })).rejects.toThrow(expectedError);
 
       expect(findOneByMock).toHaveBeenCalledTimes(1);
       expect(findDescendantsMock).toHaveBeenCalledTimes(1);
@@ -253,7 +254,7 @@ describe('ServiceManager', () => {
       createLockMock.mockResolvedValue(lock);
       filterActionsMock.mockResolvedValueOnce([]).mockResolvedValueOnce([{ actionId: 'actionId' }]);
 
-      await expect(serviceManager.rotate(service.id)).rejects.toThrow(expectedError);
+      await expect(serviceManager.rotate({ serviceId: service.id })).rejects.toThrow(expectedError);
 
       expect(findOneByMock).toHaveBeenCalledTimes(1);
       expect(findDescendantsMock).toHaveBeenCalledTimes(1);
@@ -277,7 +278,7 @@ describe('ServiceManager', () => {
       const serviceId = 'serviceId';
       findOneByMock.mockResolvedValue(null);
 
-      await expect(serviceManager.rotate(serviceId)).rejects.toThrow(new ServiceNotFoundError(`service ${serviceId} not found`));
+      await expect(serviceManager.rotate({ serviceId })).rejects.toThrow(new ServiceNotFoundError(`service ${serviceId} not found`));
 
       expect(findOneByMock).toHaveBeenCalledTimes(1);
       expect(findDescendantsMock).toHaveBeenCalledTimes(0);
@@ -295,7 +296,7 @@ describe('ServiceManager', () => {
       findDescendantsMock.mockResolvedValue([service]);
       createLockMock.mockRejectedValue(error);
 
-      await expect(serviceManager.rotate(service.id)).rejects.toThrow(error);
+      await expect(serviceManager.rotate({ serviceId: service.id })).rejects.toThrow(error);
 
       expect(findOneByMock).toHaveBeenCalledTimes(1);
       expect(findDescendantsMock).toHaveBeenCalledTimes(1);
@@ -322,7 +323,7 @@ describe('ServiceManager', () => {
       createLockMock.mockResolvedValue(lock);
       filterActionsMock.mockResolvedValueOnce([]).mockRejectedValueOnce(error);
 
-      await expect(serviceManager.rotate(service.id)).rejects.toThrow(error);
+      await expect(serviceManager.rotate({ serviceId: service.id })).rejects.toThrow(error);
 
       expect(findOneByMock).toHaveBeenCalledTimes(1);
       expect(findDescendantsMock).toHaveBeenCalledTimes(1);
@@ -352,7 +353,7 @@ describe('ServiceManager', () => {
       filterActionsMock.mockResolvedValue([]);
       removeLockMock.mockRejectedValue(error);
 
-      await expect(serviceManager.rotate(service.id)).rejects.toThrow(error);
+      await expect(serviceManager.rotate({ serviceId: service.id })).rejects.toThrow(error);
 
       expect(findOneByMock).toHaveBeenCalledTimes(1);
       expect(findDescendantsMock).toHaveBeenCalledTimes(1);

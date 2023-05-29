@@ -1,6 +1,7 @@
 import { FactoryFunction } from 'tsyringe';
 import { DataSource } from 'typeorm';
 import { DATA_SOURCE_PROVIDER } from '../../../common/db';
+import { RotationRequest } from '../../models/service';
 import { Rotation as RotationEntity, ROTATION_IDENTIFIER_COLUMN } from './rotation';
 import { Service as ServiceEntity } from './service';
 import { Block as BlockEntity } from './block';
@@ -53,8 +54,8 @@ const createServiceRepository = (dataSource: DataSource) => {
         .where('block.blocker_id = :id', { id })
         .getMany();
     },
-    async createServiceRotation(id: string): Promise<RotationCreationResult[]> {
-      const service = (await this.findOneBy({ id })) as ServiceEntity;
+    async createServiceRotation(rotationRequest: RotationRequest): Promise<RotationCreationResult[]> {
+      const service = (await this.findOneBy({ id: rotationRequest.serviceId })) as ServiceEntity;
 
       // get a flat descendants tree of the service in full depth, this includes the service itself
       const descendants = (await this.findDescendants(service, false)) as ServiceEntity[];
@@ -65,10 +66,15 @@ const createServiceRepository = (dataSource: DataSource) => {
       // create the new rotations
       const newRotations = servicesWithCurrentRotation.map((service: ServiceEntity) => {
         const currentRotation = service.rotations[0];
+
         return {
           serviceId: service.id,
-          parentRotation: currentRotation.serviceId === id ? currentRotation.parentRotation : +(currentRotation.parentRotation as number) + 1,
+          parentRotation:
+            currentRotation.serviceId === rotationRequest.serviceId
+              ? currentRotation.parentRotation
+              : +(currentRotation.parentRotation as number) + 1,
           serviceRotation: +currentRotation.serviceRotation + 1,
+          description: rotationRequest.description,
         };
       });
 

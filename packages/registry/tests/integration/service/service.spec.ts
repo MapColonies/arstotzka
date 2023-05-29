@@ -192,7 +192,7 @@ describe('service', function () {
 
         const rendering = seeded.get(Ecosystem.RENDERING) as Service & { rotation: number };
         const osm2pgRendering = seeded.get(Ecosystem.OSM2PG_RENDERING) as Service & { rotation: number };
-        const roatateResponse = await requestSender.rotateService(rendering.id);
+        const roatateResponse = await requestSender.rotateService(rendering.id, { description: 'some description' });
 
         expect(roatateResponse.status).toBe(httpStatusCodes.NO_CONTENT);
         expect(createLockMock).toHaveBeenCalledTimes(1);

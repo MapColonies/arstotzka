@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-{{ $chartName }}-network-configmap
+  name: {{ .Values.networkCM | quote }}
 data:
   MEDIATOR_ACTIONY_URL: {{ .Values.network.actiony.url | quote }}
   MEDIATOR_LOCKY_URL: {{ .Values.network.locky.url | quote }}

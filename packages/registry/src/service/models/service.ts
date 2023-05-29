@@ -39,3 +39,8 @@ export interface DetailedService extends IService {
   rotations?: IRotation[];
   blocks?: Required<IBlock>[];
 }
+
+export interface RotationRequest {
+  serviceId: string;
+  description?: string;
+}

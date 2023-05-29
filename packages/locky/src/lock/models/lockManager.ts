@@ -73,7 +73,7 @@ export class LockManager {
     const lockId = await this.lockRepository.createLock({
       services: service.blockees.map((blockee) => blockee.serviceId),
       expiration: this.app.reserveLockExpiration,
-      reason: `${serviceId} access reserve`,
+      reason: `${service.namespaceName} ${service.serviceName} ${serviceId} access reserve`,
     });
 
     try {

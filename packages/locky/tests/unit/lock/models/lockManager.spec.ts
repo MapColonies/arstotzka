@@ -102,7 +102,7 @@ describe('ServiceManager', () => {
 
   describe('#reserve', () => {
     it('should reserve access for a service who has no active blockees', async () => {
-      const service = { serviceId: 'service1', blockees: [{ serviceId: 'service2' }] };
+      const service = { namespaceName: 'n1', serviceName: 's1', serviceId: 'service1', blockees: [{ serviceId: 'service2' }] };
       const lockId = 'lockId';
       findNonexpiredLocksMock.mockResolvedValue([]);
       fetchServiceMock.mockResolvedValue(service);
@@ -122,7 +122,7 @@ describe('ServiceManager', () => {
       expect(createLockMock).toHaveBeenCalledWith({
         services: [service.blockees[0].serviceId],
         expiration: appConfig.reserveLockExpiration,
-        reason: `${service.serviceId} access reserve`,
+        reason: `${service.namespaceName} ${service.serviceName} ${service.serviceId} access reserve`,
       });
       expect(filterActionsMock).toHaveBeenCalledWith({ service: service.blockees[0].serviceId, status: [ActionStatus.ACTIVE], limit: 1 });
     });
@@ -177,7 +177,12 @@ describe('ServiceManager', () => {
     });
 
     it('should reject with the thrown mediator error and delete created lock if thrown mid reservation', async () => {
-      const service = { serviceId: 'service1', blockees: [{ serviceId: 'service2' }, { serviceId: 'service3' }] };
+      const service = {
+        namespaceName: 'n1',
+        serviceName: 's1',
+        serviceId: 'service1',
+        blockees: [{ serviceId: 'service2' }, { serviceId: 'service3' }],
+      };
       const lockId = 'lockId';
       const expected = new Error('mediator error');
       findNonexpiredLocksMock.mockResolvedValue([]);
@@ -197,7 +202,7 @@ describe('ServiceManager', () => {
       expect(createLockMock).toHaveBeenCalledWith({
         services: [service.blockees[0].serviceId, service.blockees[1].serviceId],
         expiration: appConfig.reserveLockExpiration,
-        reason: `${service.serviceId} access reserve`,
+        reason: `${service.namespaceName} ${service.serviceName} ${service.serviceId} access reserve`,
       });
       expect(filterActionsMock).toHaveBeenNthCalledWith(1, { service: service.blockees[0].serviceId, status: [ActionStatus.ACTIVE], limit: 1 });
       expect(filterActionsMock).toHaveBeenNthCalledWith(2, { service: service.blockees[1].serviceId, status: [ActionStatus.ACTIVE], limit: 1 });
@@ -207,6 +212,8 @@ describe('ServiceManager', () => {
     it('should reject with activeBlockingActionsError and delete created lock if an active blockee is found mid reservation', async () => {
       const service = {
         serviceId: 'service1',
+        namespaceName: 'n1',
+        serviceName: 's1',
         blockees: [
           { serviceId: '2', serviceName: 'service2' },
           { serviceId: '3', serviceName: 'ingestion' },
@@ -231,7 +238,7 @@ describe('ServiceManager', () => {
       expect(createLockMock).toHaveBeenCalledWith({
         services: [service.blockees[0].serviceId, service.blockees[1].serviceId],
         expiration: appConfig.reserveLockExpiration,
-        reason: `${service.serviceId} access reserve`,
+        reason: `${service.namespaceName} ${service.serviceName} ${service.serviceId} access reserve`,
       });
       expect(filterActionsMock).toHaveBeenNthCalledWith(1, { service: service.blockees[0].serviceId, status: [ActionStatus.ACTIVE], limit: 1 });
       expect(filterActionsMock).toHaveBeenNthCalledWith(2, { status: 'inprogress' }, { url: appConfig.serviceToActionsUrlMap.get('ingestion') });

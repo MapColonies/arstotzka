@@ -40,6 +40,11 @@ paths:
       summary: bump rotation for a service and its children
       parameters:
         - $ref: '#/components/parameters/serviceId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/rotationRquest'
       responses:
         204:
           description: Service rotation bumped
@@ -166,3 +171,9 @@ components:
         - serviceRotation
         - createdAt
         - updatedAt
+    rotationRquest:
+      type: object
+      properties:
+        description:
+          type: string
+          maxLength: 255

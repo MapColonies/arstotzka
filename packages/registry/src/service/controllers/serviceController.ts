@@ -9,7 +9,7 @@ import { ServiceManager } from '../models/serviceManager';
 import { ServiceIsActiveError } from '../models/errors';
 
 type GetServiceHandler = RequestHandler<{ serviceId: string }, FlattedDetailedService>;
-type RotateServiceHandler = RequestHandler<{ serviceId: string }>;
+type RotateServiceHandler = RequestHandler<{ serviceId: string }, undefined, { description?: string }>;
 
 @injectable()
 export class ServiceController {
@@ -29,7 +29,7 @@ export class ServiceController {
 
   public rotateService: RotateServiceHandler = async (req, res, next) => {
     try {
-      await this.manager.rotate(req.params.serviceId);
+      await this.manager.rotate({ serviceId: req.params.serviceId, description: req.body.description });
       return res.status(httpStatus.NO_CONTENT).json();
     } catch (error) {
       if (error instanceof ServiceNotFoundError) {

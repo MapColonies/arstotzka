@@ -118,6 +118,8 @@ describe('lock', function () {
       });
 
       it('should return 201 and the lockId for a reservation of a service with inactive blockees', async function () {
+        const namespaceName = 'n1';
+        const serviceName = 's1';
         const serviceId = faker.datatype.uuid();
         const blockee1 = faker.datatype.uuid();
         const blockee2 = faker.datatype.uuid();
@@ -126,7 +128,7 @@ describe('lock', function () {
           { serviceId: blockee2, serviceName: '2' },
         ];
 
-        fetchServiceMock.mockResolvedValueOnce({ serviceId, blockees });
+        fetchServiceMock.mockResolvedValueOnce({ namespaceName, serviceName, serviceId, blockees });
         filterActionsMock.mockResolvedValue([]);
 
         const response = await requestSender.reserveAccess(serviceId);
@@ -140,7 +142,9 @@ describe('lock', function () {
         const lockId = (response.body as { lockId: string }).lockId;
         const createdLock = await lockRepository.findOneBy({ lockId });
 
-        expect(createdLock).toEqual(expect.objectContaining({ serviceIds: [blockee1, blockee2], reason: `${serviceId} access reserve` }));
+        expect(createdLock).toEqual(
+          expect.objectContaining({ serviceIds: [blockee1, blockee2], reason: `${namespaceName} ${serviceName} ${serviceId} access reserve` })
+        );
       });
     });
   });

@@ -8,6 +8,7 @@ import { ServiceRepository, SERVICE_REPOSITORY_SYMBOL } from '../DAL/typeorm/ser
 import { IAppConfig } from '../../common/interfaces';
 import { ServiceIsActiveError } from './errors';
 import { flattenDetailedService } from './util';
+import { RotationRequest } from './service';
 
 @injectable()
 export class ServiceManager {
@@ -38,8 +39,10 @@ export class ServiceManager {
     );
   }
 
-  public async rotate(serviceId: string): Promise<void> {
-    this.logger.info({ msg: 'rotating service', serviceId });
+  public async rotate(rotationRequest: RotationRequest): Promise<void> {
+    const { serviceId } = rotationRequest;
+
+    this.logger.info({ msg: 'rotating service', rotationRequest });
 
     const service = await this.serviceRepository.findOneBy({ id: serviceId });
 
@@ -78,7 +81,6 @@ export class ServiceManager {
         }
 
         if (actions.length > 0) {
-          console.log('avi');
           this.logger.error({ msg: `service ${descendant.id} has active actions`, descendant });
           throw new ServiceIsActiveError(`service ${descendant.id} has active actions`);
         }
@@ -94,14 +96,15 @@ export class ServiceManager {
     }
 
     // create the new rotations for the whole service tree
-    const rotations = await this.serviceRepository.createServiceRotation(serviceId);
+    const rotations = await this.serviceRepository.createServiceRotation(rotationRequest);
 
     this.logger.info({
-      msg: 'rotation creation completed',
+      msg: 'rotation completed',
       services: descendants,
       lock,
       rotations: rotations,
       rotationsCount: rotations.length,
+      rotationRequest,
     });
 
     this.logger.info({ msg: 'unlocking services', services: descendants, lock });

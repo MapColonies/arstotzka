@@ -7,7 +7,7 @@ export class ServiceRequestSender {
     return supertest.agent(this.app).get(`/service/${serviceId}`);
   }
 
-  public async rotateService(serviceId: string): Promise<supertest.Response> {
-    return supertest.agent(this.app).post(`/service/${serviceId}/rotate`);
+  public async rotateService(serviceId: string, body?: { description?: string }): Promise<supertest.Response> {
+    return supertest.agent(this.app).post(`/service/${serviceId}/rotate`).set('Content-Type', 'application/json').send(body);
   }
 }
