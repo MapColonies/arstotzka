@@ -1,0 +1,10 @@
+{{- $chartName := include "arstotzka.name" . -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.networkCM | quote }}
+data:
+  MEDIATOR_ACTIONY_URL: {{ .Values.network.actiony.url | quote }}
+  MEDIATOR_LOCKY_URL: {{ .Values.network.locky.url | quote }}
+  MEDIATOR_REGISTRY_URL: {{ .Values.network.registry.url | quote }}
+  APP_INGESTION_ACTIONS_URL: {{ .Values.network.ingestion.url | quote }}

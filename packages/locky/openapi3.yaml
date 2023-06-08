@@ -1,0 +1,160 @@
+openapi: 3.0.1
+info:
+  title: locky
+  description: api for managing locking services in the vector ecosystem
+  version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+tags:
+  - name: lock
+    description: a lock on service(s)
+security: []
+paths:
+  /lock:
+    post:
+      operationId: postLock
+      tags:
+        - lock
+      summary: create a lock on services
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/lockRequest'
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lockResponse'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        409:
+          $ref: '#/components/responses/Conflict'
+        5XX:
+          $ref: '#/components/responses/UnexpectedError'
+  /lock/{lockId}:
+    delete:
+      operationId: deleteLock
+      tags:
+        - lock
+      summary: delete specified lock
+      parameters:
+        - $ref: '#/components/parameters/lockId'
+      responses:
+        204:
+          description: Deleted
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        5XX:
+          $ref: '#/components/responses/UnexpectedError'
+  /lock/reserve:
+    post:
+      operationId: reserveAccess
+      tags:
+        - lock
+      summary: create a lock on the services who are blocked by provided service
+      parameters:
+        - in: query
+          name: service
+          description: >-
+            the service id who's reserving access
+          schema:
+            $ref: '#/components/schemas/serviceId'
+          required: true
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lockResponse'
+        204:
+          description: Access granted, lock isn't needed
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        409:
+          $ref: '#/components/responses/Conflict'
+        5XX:
+          $ref: '#/components/responses/UnexpectedError'
+components:
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    UnexpectedError:
+      description: Unexpected Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+  parameters:
+    lockId:
+      in: path
+      name: lockId
+      schema:
+        $ref: '#/components/schemas/lockId'
+      required: true
+  schemas:
+    error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    id:
+      type: string
+      format: uuid
+    serviceId:
+      $ref: '#/components/schemas/id'
+    lockId:
+      $ref: '#/components/schemas/id'
+    expirationMilliseconds:
+      type: integer
+      minimum: 1
+    lockRequest:
+      type: object
+      properties:
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/serviceId'
+          minItems: 1
+          uniqueItems: true
+        reason:
+          type: string
+          maxLength: 255
+        expiration:
+          $ref: '#/components/schemas/expirationMilliseconds'
+      required:
+        - services
+      additionalProperties: false
+    lockResponse:
+      type: object
+      properties:
+        lockId:
+          $ref: '#/components/schemas/lockId'
+      required:
+        - lockId

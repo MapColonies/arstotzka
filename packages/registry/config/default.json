@@ -1,0 +1,59 @@
+{
+  "openapiConfig": {
+    "filePath": "./openapi3.yaml",
+    "basePath": "/docs",
+    "rawPath": "/api",
+    "uiPath": "/api"
+  },
+  "telemetry": {
+    "logger": {
+      "level": "info",
+      "prettyPrint": false
+    }
+  },
+  "server": {
+    "port": "8080",
+    "request": {
+      "payload": {
+        "limit": "1mb"
+      }
+    },
+    "response": {
+      "compression": {
+        "enabled": true,
+        "options": null
+      }
+    }
+  },
+  "db": {
+    "type": "postgres",
+    "host": "localhost",
+    "port": 5432,
+    "username": "postgres",
+    "password": "postgres",
+    "enableSslAuth": false,
+    "sslPaths": {
+      "ca": "",
+      "key": "",
+      "cert": ""
+    },
+    "database": "postgres",
+    "schema": "registry"
+  },
+  "app": {
+    "rotationLockExpiration": 60000,
+    "serviceToActionsUrlMap": {
+      "ingestion": "http://osm-sync-tracker.com/sync"
+    }
+  },
+  "mediator": {
+    "timeout": 10000,
+    "enableRetryStrategy": false,
+    "actiony": {
+      "url": "http://actiony.com"
+    },
+    "locky": {
+      "url": "http://locky.com"
+    }
+  }
+}

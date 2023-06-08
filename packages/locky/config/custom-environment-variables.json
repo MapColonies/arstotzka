@@ -1,0 +1,106 @@
+{
+  "openapiConfig": {
+    "filePath": "OPENAPI_FILE_PATH"
+  },
+  "telemetry": {
+    "serviceName": "TELEMETRY_SERVICE_NAME",
+    "hostname": "TELEMETRY_HOST_NAME",
+    "version": "TELEMETRY_SERVICE_VERSION",
+    "logger": {
+      "level": "LOG_LEVEL",
+      "prettyPrint": {
+        "__name": "LOG_PRETTY_PRINT_ENABLED",
+        "__format": "boolean"
+      }
+    },
+    "tracing": {
+      "enabled": "TELEMETRY_TRACING_ENABLED",
+      "url": "TELEMETRY_TRACING_URL"
+    },
+    "metrics": {
+      "enabled": "TELEMETRY_METRICS_ENABLED",
+      "url": "TELEMETRY_METRICS_URL",
+      "interval": "TELEMETRY_METRICS_INTERVAL"
+    }
+  },
+  "server": {
+    "port": "SERVER_PORT",
+    "request": {
+      "payload": {
+        "limit": "REQUEST_PAYLOAD_LIMIT"
+      }
+    },
+    "response": {
+      "compression": {
+        "enabled": {
+          "__name": "RESPONSE_COMPRESSION_ENABLED",
+          "__format": "boolean"
+        }
+      }
+    }
+  },
+  "db": {
+    "type": "DB_TYPE",
+    "host": "DB_HOST",
+    "port": {
+      "__name": "DB_PORT",
+      "__format": "number"
+    },
+    "username": "DB_USERNAME",
+    "password": "DB_PASSWORD",
+    "enableSslAuth": {
+      "__name": "DB_ENABLE_SSL_AUTH",
+      "__format": "boolean"
+    },
+    "sslPaths": {
+      "ca": "DB_CA_PATH",
+      "key": "DB_KEY_PATH",
+      "cert": "DB_CERT_PATH"
+    },
+    "database": "DB_NAME",
+    "schema": "DB_SCHEMA"
+  },
+  "app": {
+    "reserveLockExpiration": {
+      "__name": "APP_RESERVE_LOCK_EXPIRATION",
+      "__format": "number"
+    },
+    "serviceToActionsUrlMap": {
+      "ingestion": "APP_INGESTION_ACTIONS_URL"
+    }
+  },
+  "mediator": {
+    "timeout": {
+      "__name": "MEDIATOR_TIMEOUT",
+      "__format": "number"
+    },
+    "enableRetryStrategy": {
+      "__name": "MEDIATOR_ENABLE_RETRY_STRATEGY",
+      "__format": "boolean"
+    },
+    "retryStrategy": {
+      "retries": {
+        "__name": "MEDIATOR_RETRY_STRATEGY_RETRIES",
+        "__format": "number"
+      },
+      "shouldResetTimeout": {
+        "__name": "MEDIATOR_RETRY_STRATEGY_SHOULD_RESET_TIMEOUT",
+        "__format": "boolean"
+      },
+      "isExponential": {
+        "__name": "MEDIATOR_RETRY_STRATEGY_IS_EXPONENTIAL",
+        "__format": "boolean"
+      },
+      "delay": {
+        "__name": "MEDIATOR_RETRY_STRATEGY_DELAY",
+        "__format": "number"
+      }
+    },
+    "actiony": {
+      "url": "MEDIATOR_ACTIONY_URL"
+    },
+    "registry": {
+      "url": "MEDIATOR_REGISTRY_URL"
+    }
+  }
+}

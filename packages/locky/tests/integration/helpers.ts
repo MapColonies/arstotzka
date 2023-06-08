@@ -1,0 +1,1 @@
+export const BEFORE_ALL_TIMEOUT = 15000;

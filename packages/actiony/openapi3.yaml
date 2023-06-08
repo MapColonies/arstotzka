@@ -1,0 +1,252 @@
+openapi: 3.0.1
+info:
+  title: actiony
+  description: api for managing actions throught their lifecycle
+  version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+tags:
+  - name: action
+    description: an action in the ecosystem
+security: []
+paths:
+  /action:
+    get:
+      operationId: getActions
+      tags:
+        - action
+      summary: return all actions matching criteria
+      parameters:
+        - in: query
+          name: service
+          description: >-
+            returned actions matching the following service
+          schema:
+            $ref: '#/components/schemas/serviceId'
+        - in: query
+          name: status
+          description: >-
+            returned actions matching the following statuses
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/actionStatus'
+        - in: query
+          name: serviceRotation
+          description: >-
+            returned actions matching the following service rotation
+          schema:
+            $ref: '#/components/schemas/rotation'
+        - in: query
+          name: parentRotation
+          description: >-
+            returned actions matching the following service parent rotation
+          schema:
+            $ref: '#/components/schemas/rotation'
+        - in: query
+          name: sort
+          description: returned actions order sorted by creation date
+          schema:
+            $ref: '#/components/schemas/order'
+        - in: query
+          name: limit
+          description: returned actions limitation
+          schema:
+            $ref: '#/components/schemas/limit'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/action'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        5XX:
+          $ref: '#/components/responses/UnexpectedError'
+    post:
+      operationId: postAction
+      tags:
+        - action
+      summary: create a new action
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                serviceId:
+                  $ref: '#/components/schemas/serviceId'
+                state:
+                  $ref: '#/components/schemas/actionState'
+                metadata:
+                  $ref: '#/components/schemas/actionMetadata'
+              required:
+                - serviceId
+                - state
+              additionalProperties: false
+      responses:
+        '201':
+          $ref: '#/components/responses/CreatedActionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        5XX:
+          $ref: '#/components/responses/UnexpectedError'
+  /action/{actionId}:
+    patch:
+      operationId: patchActionById
+      tags:
+        - action
+      summary: update action by id
+      parameters:
+        - in: path
+          name: actionId
+          schema:
+            $ref: '#/components/schemas/actionId'
+          required: true
+          description: id of the action to patch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                status:
+                  $ref: '#/components/schemas/actionStatus'
+                metadata:
+                  $ref: '#/components/schemas/actionMetadata'
+              additionalProperties: false
+      responses:
+        '200':
+          description: action updated
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        5XX:
+          $ref: '#/components/responses/UnexpectedError'
+components:
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    UnexpectedError:
+      description: Unexpected Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    CreatedActionResponse:
+      description: the created action id
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              actionId:
+                $ref: '#/components/schemas/actionId'
+            required:
+              - actionId
+  schemas:
+    error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    actionId:
+      type: string
+      format: uuid
+    serviceId:
+      type: string
+      format: uuid
+    namespaceId:
+      type: number
+      minimum: 1
+    rotation:
+      type: number
+      minimum: 0
+    actionState:
+      type: integer
+      minimum: 0
+    actionStatus:
+      type: string
+      enum:
+        - active
+        - completed
+        - failed
+        - canceled
+    actionMetadata:
+      type: object
+      additionalProperties: true
+    date:
+      type: string
+      format: date-time
+    order:
+      type: string
+      enum:
+        - asc
+        - desc
+      default: desc
+    limit:
+      type: integer
+      minimum: 1
+    action:
+      type: object
+      properties:
+        actionId:
+          $ref: '#/components/schemas/actionId'
+        serviceId:
+          $ref: '#/components/schemas/serviceId'
+        namespaceId:
+          $ref: '#/components/schemas/namespaceId'
+        serviceRotation:
+          $ref: '#/components/schemas/rotation'
+        parentRotation:
+          $ref: '#/components/schemas/rotation'
+        state:
+          $ref: '#/components/schemas/actionState'
+        status:
+          $ref: '#/components/schemas/actionStatus'
+        metadata:
+          $ref: '#/components/schemas/actionMetadata'
+        createdAt:
+          $ref: '#/components/schemas/date'
+        updatedAt:
+          $ref: '#/components/schemas/date'
+        closedAt:
+          $ref: '#/components/schemas/date'
+      required:
+        - actionId
+        - serviceId
+        - namespaceId
+        - serviceRotation
+        - state
+        - status
+        - createdAt

@@ -1,0 +1,179 @@
+openapi: 3.0.1
+info:
+  title: registry
+  description: api for managing namespaces and services in the vector ecosystem
+  version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+tags:
+  - name: service
+    description: a service in the vector ecosystem
+security: []
+paths:
+  /service/{serviceId}:
+    get:
+      operationId: getService
+      tags:
+        - service
+      summary: get detailed info on the service
+      parameters:
+        - $ref: '#/components/parameters/serviceId'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/service'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        5XX:
+          $ref: '#/components/responses/UnexpectedError'
+  /service/{serviceId}/rotate:
+    post:
+      operationId: postRotation
+      tags:
+        - service
+      summary: bump rotation for a service and its children
+      parameters:
+        - $ref: '#/components/parameters/serviceId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/rotationRquest'
+      responses:
+        204:
+          description: Service rotation bumped
+        400:
+          $ref: '#/components/responses/BadRequest'
+        409:
+          $ref: '#/components/responses/Conflict'
+        5XX:
+          $ref: '#/components/responses/UnexpectedError'
+components:
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    UnexpectedError:
+      description: Unexpected Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+  parameters:
+    serviceId:
+      in: path
+      name: serviceId
+      schema:
+        $ref: '#/components/schemas/serviceId'
+      required: true
+  schemas:
+    error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    serviceId:
+      type: string
+      format: uuid
+    namespaceId:
+      type: number
+      minimum: 1
+    serviceName:
+      type: string
+    namespaceName:
+      type: string
+    rotation:
+      type: number
+      minimum: 1
+    serviceType:
+      type: string
+      enum:
+        - consumer
+        - producer
+    parallelism:
+      type: string
+      enum:
+        - single
+        - replaceable
+        - multiple
+    date:
+      type: string
+      format: date-time
+    baseService:
+      type: object
+      properties:
+        serviceId:
+          $ref: '#/components/schemas/serviceId'
+        serviceName:
+          $ref: '#/components/schemas/serviceName'
+      required:
+        - serviceId
+        - serviceName
+    service:
+      allOf:
+        - $ref: '#/components/schemas/baseService'
+      type: object
+      properties:
+        namespaceId:
+          $ref: '#/components/schemas/namespaceId'
+        namespaceName:
+          $ref: '#/components/schemas/namespaceName'
+        serviceType:
+          $ref: '#/components/schemas/serviceType'
+        parentRotation:
+          $ref: '#/components/schemas/rotation'
+        serviceRotation:
+          $ref: '#/components/schemas/rotation'
+        parallelism:
+          $ref: '#/components/schemas/parallelism'
+        parent:
+          $ref: '#/components/schemas/serviceId'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/serviceId'
+        blockees:
+          type: array
+          items:
+            $ref: '#/components/schemas/baseService'
+        createdAt:
+          $ref: '#/components/schemas/date'
+        updatedAt:
+          $ref: '#/components/schemas/date'
+      required:
+        - namespaceId
+        - namespaceName
+        - parallelism
+        - serviceType
+        - serviceRotation
+        - createdAt
+        - updatedAt
+    rotationRquest:
+      type: object
+      properties:
+        description:
+          type: string
+          maxLength: 255

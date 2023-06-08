@@ -1,0 +1,103 @@
+global:
+  cloudProvider: {}
+  tracing: {}
+  metrics: {}
+  environment: {}
+
+enabled: true
+environment: development
+replicaCount: 1
+initialDelaySeconds: 60
+nodePort: 30030 #for minikube deployment only
+resetOnConfigChange: true
+
+annotations: {}
+podAnnotations: {}
+
+cloudProvider:
+  flavor: openshift
+  dockerRegistryUrl: my-registry-url.io
+  imagePullSecretName: 'my-registry-secret'
+
+caSecretName: ''
+caPath: '/usr/local/share/ca-certificates'
+caKey: 'ca.crt'
+
+image:
+  pullPolicy: Always
+  repository: locky
+  # Overrides the image tag, default is the chart appVersion.
+  # tag: 'latest'
+
+arstotzka:
+  networkCM: arstotzka-network-configmap
+
+env:
+  port: 8080
+  targetPort: 8080
+  protocol: TCP
+  logLevel: info
+  logPrettyPrintEnabled: false
+  responseCompressionEnabled: true
+  requestPayloadLimit: 1mb
+  tracing:
+    enabled: false
+    url: http://localhost:55681/v1/trace
+    ratio: 1
+  metrics:
+    enabled: false
+    url: http://localhost:55681/v1/metrics
+  app:
+    reserveLockExpiration: 60000
+    serviceToActionsUrlMap:
+      ingestion: 'http://osm-sync-tracker.com'
+  mediator:
+    timeout: 10000
+    retryStrategy:
+      enabled: false
+      # retries: 3
+      # shouldResetTimeout: false
+      # isExponential: false
+      # delay: 100
+
+dbConfig:
+  host: localhost
+  username: postgres
+  password: postgres
+  database: arstotzka
+  schema: locky
+  port: 5432
+  sslAuth:
+    enabled: false
+    secretName: secret-name
+    certFileName: postgresql.crt
+    keyFileName: postgresql.key
+    caFileName: root.crt
+
+resources:
+  enabled: true
+  value:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+route:
+  enabled: true
+  path: /
+  timeout:
+    enabled: false # defaults to 30s by openshift
+    duration: 60s # supported units (us, ms, s, m, h, d)
+
+service: {}
+  # nameOverride: override
+
+ingress:
+  enabled: false
+  path: /
+  host: 'localhost'
+  cors:
+    enabled: true
+    origin: '*'
