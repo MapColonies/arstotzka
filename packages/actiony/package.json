@@ -1,6 +1,6 @@
 {
   "name": "actiony",
-  "version": "0.0.1-alpha.3",
+  "version": "1.0.0",
   "description": "arstotzka's actions api",
   "main": "./src/index.ts",
   "scripts": {
