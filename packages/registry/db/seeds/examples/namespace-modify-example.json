@@ -9,7 +9,7 @@
     {
       "name": "osmdbt",
       "action": "modify",
-      "blockees": ["planet-dumper-pg", "ingestion"]
+      "blockees": ["planet-dumper-pg"]
     },
     {
       "name": "planet-dumper-pg",
