@@ -56,7 +56,8 @@ describe('service', function () {
     requestSender = new ServiceRequestSender(app);
 
     const dataSource = container.resolve<DataSource>(DATA_SOURCE_PROVIDER);
-    const { services } = (await runSeeder(dataSource, NamespaceSeeder)) as NamespaceSeederOutput;
+    const seedResult = await runSeeder(dataSource, NamespaceSeeder);
+    const { services } = seedResult as NamespaceSeederOutput;
     seeded = services;
   }, BEFORE_ALL_TIMEOUT);
 

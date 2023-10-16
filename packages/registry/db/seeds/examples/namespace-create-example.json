@@ -1,5 +1,6 @@
 {
   "name": "main",
+  "action": "create",
   "services": [
     {
       "name": "rendering",
