@@ -53,7 +53,7 @@ actiony:
 
   image:
     pullPolicy: Always
-    repository: actiony
+    repository: arstotzka-actiony
     # Overrides the image tag, default is the chart appVersion.
     # tag: 'latest'
 
@@ -140,7 +140,7 @@ locky:
 
   image:
     pullPolicy: Always
-    repository: locky
+    repository: arstotzka-locky
     # Overrides the image tag, default is the chart appVersion.
     # tag: 'latest'
 
@@ -229,7 +229,7 @@ registry:
 
   image:
     pullPolicy: Always
-    repository: registry
+    repository: arstotzka-registry
     # Overrides the image tag, default is the chart appVersion.
     # tag: 'latest'
 

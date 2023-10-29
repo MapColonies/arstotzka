@@ -131,17 +131,17 @@ const createNamespace = async (queryRunner: QueryRunner, seedInput: NamespaceSee
 
   // seed blocks
   for (const service of seedInput.services ?? []) {
-    const blockerService = map.get(service.name);
+    const blockerService = map.get(service.name) as Service;
     for (const blockee of service.blockees ?? []) {
-      const blockeeService = map.get(blockee);
+      const blockeeService = map.get(blockee) as Service;
       await blockeRepo.save({
-        blockerId: (blockerService as Service).id,
+        blockerId: blockerService.id,
         blockerService: blockerService,
-        blockeeId: (blockeeService as Service).id,
+        blockeeId: blockeeService.id,
         blockeeService: blockeeService,
       });
 
-      console.log(`created block ${blockerService?.name as string} on ${blockeeService?.name as string}`);
+      console.log(`created block ${blockerService.name} on ${blockeeService.name}`);
     }
   }
 
@@ -255,6 +255,7 @@ export interface NamespaceSeederOutput {
 export const SEEDER_INPUT_PATH = join(homedir(), SEEDER_INPUT_FILE_NAME);
 
 export default class NamespaceSeeder implements Seeder {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async run(dataSource: DataSource, factoryManager: SeederFactoryManager): Promise<NamespaceSeederOutput> {
     const inputContent = await readFile(SEEDER_INPUT_PATH, 'utf-8');
     const seedInput = JSON.parse(inputContent) as NamespaceSeederInput;
