@@ -1,0 +1,91 @@
+{
+  "name": "main",
+  "action": "modify",
+  "services": [
+    {
+      "name": "osm2pg-rendering",
+      "action": "delete"
+    },
+    {
+      "name": "osmdbt",
+      "action": "modify",
+      "blockees": ["planet-dumper-pg"]
+    },
+    {
+      "name": "ingestion",
+      "action": "modify",
+      "blockees": ["planet-dumper-pg"]
+    },
+    {
+      "name": "planet-dumper-pg",
+      "action": "create",
+      "parallelism": "single",
+      "serviceType": "consumer",
+      "parent": "osmdbt",
+      "blockees": ["planet-dumper", "osmdbt", "ingestion"],
+      "rotation": 3
+    },
+    {
+      "name": "planet-dumper-ng",
+      "action": "create",
+      "parallelism": "single",
+      "serviceType": "consumer",
+      "parent": "planet-dumper-pg",
+      "rotation": 3
+    },
+    {
+      "name": "planet-dumper",
+      "parallelism": "replaceable",
+      "action": "modify",
+      "blockees": ["planet-dumper-pg"]
+    },
+    {
+      "name": "osm2pg-render-base",
+      "action": "create",
+      "parallelism": "replaceable",
+      "serviceType": "consumer",
+      "parent": "osmdbt",
+      "rotation": 1
+    },
+    {
+      "name": "rendering-base",
+      "action": "create",
+      "parallelism": "multiple",
+      "serviceType": "consumer",
+      "parent": "osm2pg-render-base",
+      "rotation": 1
+    },
+    {
+      "name": "osm2pg-render-thin",
+      "action": "create",
+      "parallelism": "replaceable",
+      "serviceType": "consumer",
+      "parent": "osmdbt",
+      "rotation": 1
+    },
+    {
+      "name": "rendering-thin",
+      "action": "create",
+      "parallelism": "multiple",
+      "serviceType": "consumer",
+      "parent": "osm2pg-render-thin",
+      "rotation": 1
+    },
+    {
+      "name": "osm2pg-render-control",
+      "action": "create",
+      "parallelism": "replaceable",
+      "serviceType": "consumer",
+      "parent": "osmdbt",
+      "rotation": 1
+    },
+    {
+      "name": "rendering-control",
+      "action": "create",
+      "parallelism": "multiple",
+      "serviceType": "consumer",
+      "parent": "osm2pg-render-control",
+      "rotation": 1
+    }
+  ]
+}

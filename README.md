@@ -97,10 +97,19 @@ docker run -e COMMAND=migration:run -e SCOPES=registry,locky,actiony arstotzka-c
 ```
 
 ## Seed
-prepare your namespace seed input file, [see example](packages/registry/namespace-seeder-example.json) and locate it in `$HOME/arstotzka-namespace-seeder.json`
+prepare your namespace seed input file, [see examples](packages/registry/db/seeds/examples) and locate it in `$HOME/arstotzka-namespace-seeder.json`
+
+seeds could be of action `create`, `modify` or `delete` on a namespace. database will be populated accordingly in a single safe transaction.
+
+note the following:
+- input service list should be ordered with ancestors first
+- deleting a service will detach it from the namespace with all its children
+- blocks are only added, existing blocks will be ignored (delete blocks manually)
+- if service name is duplicated will ignore the second time specified
+- can't modify an existing service's parent
 
 ```
-docker run -e COMMAND=seed -e SCOPES=registry, -v ~/packages/registry/namespace-seeder-example.json:/root/arstotzka-namespace-seeder.json arstotzka-commander:latest
+docker run -e COMMAND=seed -e SCOPES=registry, -v ~/packages/registry/namespace-create-example.json:/root/arstotzka-namespace-seeder.json arstotzka-commander:latest
 ```
 
 ## Development
