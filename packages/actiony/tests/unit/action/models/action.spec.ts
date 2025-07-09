@@ -23,6 +23,7 @@ describe('ActionManager', () => {
   const updateLastAndCreateMock = jest.fn();
   const findOneActionByIdMock = jest.fn();
   const updateOneActionMock = jest.fn();
+  const createActionOnlyIfInactiveMock = jest.fn();
 
   const fetchServiceMock = jest.fn();
 
@@ -34,6 +35,7 @@ describe('ActionManager', () => {
       updateLastAndCreate: updateLastAndCreateMock,
       findOneActionById: findOneActionByIdMock,
       updateOneAction: updateOneActionMock,
+      createActionOnlyIfInactive: createActionOnlyIfInactiveMock,
     } as unknown as ActionRepository;
 
     const mediator = {
@@ -69,18 +71,47 @@ describe('ActionManager', () => {
       const params = { serviceId } as ActionParams;
       fetchServiceMock.mockResolvedValue(service);
       countActionsMock.mockResolvedValue(0);
-      createActionMock.mockResolvedValue(actionId);
+      createActionOnlyIfInactiveMock.mockResolvedValue(actionId);
 
       const response = await actionManager.createAction(params);
 
       expect(response).toBe(actionId);
       expect(fetchServiceMock).toHaveBeenCalledTimes(1);
       expect(countActionsMock).toHaveBeenCalledTimes(1);
-      expect(createActionMock).toHaveBeenCalledTimes(1);
+      expect(createActionOnlyIfInactiveMock).toHaveBeenCalledTimes(1);
+      expect(findActionsMock).toHaveBeenCalledTimes(0);
+      expect(createActionMock).toHaveBeenCalledTimes(0);
       expect(updateLastAndCreateMock).toHaveBeenCalledTimes(0);
       expect(fetchServiceMock).toHaveBeenCalledWith(serviceId);
       expect(countActionsMock).toHaveBeenCalledWith({ service: serviceId, status: [ActionStatus.ACTIVE] });
-      expect(createActionMock).toHaveBeenCalledWith({
+      expect(createActionOnlyIfInactiveMock).toHaveBeenCalledWith({
+        ...params,
+        namespaceId: service.namespaceId,
+        serviceRotation: service.serviceRotation,
+        parentRotation: service.parentRotation,
+      });
+    });
+
+    it('should not create an action for a single parallelism service who is active at creation time', async () => {
+      const serviceId = 'serviceId';
+      const service = { serviceId, parallelism: Parallelism.SINGLE, namespaceId: 1, serviceRotation: 1, parentRotation: 1 };
+      const params = { serviceId } as ActionParams;
+      fetchServiceMock.mockResolvedValue(service);
+      countActionsMock.mockResolvedValue(0);
+      const expected = new ParallelismMismatchError(`could not create an action for service ${service.serviceId} due to parallelism mismatch`);
+      createActionOnlyIfInactiveMock.mockRejectedValue(expected);
+
+      await expect(actionManager.createAction(params)).rejects.toThrow(expected);
+
+      expect(fetchServiceMock).toHaveBeenCalledTimes(1);
+      expect(countActionsMock).toHaveBeenCalledTimes(1);
+      expect(createActionOnlyIfInactiveMock).toHaveBeenCalledTimes(1);
+      expect(findActionsMock).toHaveBeenCalledTimes(0);
+      expect(createActionMock).toHaveBeenCalledTimes(0);
+      expect(updateLastAndCreateMock).toHaveBeenCalledTimes(0);
+      expect(fetchServiceMock).toHaveBeenCalledWith(serviceId);
+      expect(countActionsMock).toHaveBeenCalledWith({ service: serviceId, status: [ActionStatus.ACTIVE] });
+      expect(createActionOnlyIfInactiveMock).toHaveBeenCalledWith({
         ...params,
         namespaceId: service.namespaceId,
         serviceRotation: service.serviceRotation,

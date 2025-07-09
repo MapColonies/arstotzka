@@ -1,7 +1,7 @@
 import { DataSource, EntityManager, FindOptionsWhere, In } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { FactoryFunction } from 'tsyringe';
-import { Action, ActionFilter, ActionStatus, UpdatableActionParams } from '@map-colonies/arstotzka-common';
+import { Action, ActionFilter, ActionStatus, ParallelismMismatchError, UpdatableActionParams } from '@map-colonies/arstotzka-common';
 import { DATA_SOURCE_PROVIDER } from '../../../common/db';
 import { CreateActionParams } from '../../models/action';
 import { Action as ActionEntity, ACTION_IDENTIFIER_COLUMN } from './action';
@@ -53,6 +53,19 @@ const createActionRepository = (dataSource: DataSource) => {
         .execute();
       return insertResult.identifiers[0][ACTION_IDENTIFIER_COLUMN] as string;
     },
+    async createActionOnlyIfInactive(params: CreateActionParams): Promise<string> {
+      return this.manager.connection.transaction(async (transactionalEntityManager: EntityManager) => {
+        const existingAction = await this.findActions(
+          { service: params.serviceId, status: [ActionStatus.ACTIVE], sort: 'desc', limit: 1 },
+          transactionalEntityManager
+        );
+        if (existingAction.length !== 0) {
+          throw new ParallelismMismatchError(`could not create an action for service ${params.serviceId} due to parallelism mismatch`);
+        }
+
+        return this.createAction(params, transactionalEntityManager);
+      });
+    },
     async updateOneAction(actionId: string, updateParams: UpdatableActionParams, transactionManager?: EntityManager): Promise<void> {
       const scopedManager = transactionManager ?? this.manager;
 
@@ -68,16 +81,19 @@ const createActionRepository = (dataSource: DataSource) => {
       await scopedManager.createQueryBuilder(ActionEntity, 'action').update(finalParams).where({ actionId }).execute();
     },
     async updateLastAndCreate(updateParams: UpdatableActionParams, params: CreateActionParams): Promise<string> {
-      return this.manager.connection.transaction(async (entityManager: EntityManager) => {
-        const actions = await this.findActions({ service: params.serviceId, status: [ActionStatus.ACTIVE], sort: 'desc', limit: 1 }, entityManager);
+      return this.manager.connection.transaction(async (transactionalEntityManager: EntityManager) => {
+        const actions = await this.findActions(
+          { service: params.serviceId, status: [ActionStatus.ACTIVE], sort: 'desc', limit: 1 },
+          transactionalEntityManager
+        );
 
         if (actions.length !== 0) {
           const action = actions[0];
           const updatedMetadata = { ...action.metadata, ...updateParams.metadata };
-          await this.updateOneAction(action.actionId, { ...updateParams, metadata: updatedMetadata }, entityManager);
+          await this.updateOneAction(action.actionId, { ...updateParams, metadata: updatedMetadata }, transactionalEntityManager);
         }
 
-        return this.createAction(params, entityManager);
+        return this.createAction(params, transactionalEntityManager);
       });
     },
   });

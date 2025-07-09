@@ -52,7 +52,9 @@ export class ActionManager {
       parentRotation: service.parentRotation,
     };
 
-    if (service.parallelism === Parallelism.SINGLE || service.parallelism === Parallelism.MULTIPLE) {
+    if (service.parallelism === Parallelism.SINGLE) {
+      actionId = await this.actionRepository.createActionOnlyIfInactive(actionParams);
+    } else if (service.parallelism === Parallelism.MULTIPLE) {
       actionId = await this.actionRepository.createAction(actionParams);
     } else {
       actionId = await this.actionRepository.updateLastAndCreate(
