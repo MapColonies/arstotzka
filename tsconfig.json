@@ -14,7 +14,6 @@
     "declarationMap": true,
     "noEmit": true,
     "resolveJsonModule": true,
-    "typeRoots": ["./node_modules/@types"]
   },
   "include": ["src", "tests"],
   "exclude": ["dist", "node_modules"]

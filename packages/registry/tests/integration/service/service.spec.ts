@@ -66,7 +66,7 @@ describe('service', function () {
   });
 
   afterAll(async function () {
-    await serviceRepository.delete({});
+    await serviceRepository.createQueryBuilder().delete().execute();
   });
 
   describe('Happy Path', function () {

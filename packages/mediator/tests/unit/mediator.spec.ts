@@ -34,7 +34,7 @@ describe('Mediator', () => {
   });
 
   beforeEach(() => {
-    jest.resetAllMocks();
+    jest.clearAllMocks();
     nock.cleanAll();
   });
 

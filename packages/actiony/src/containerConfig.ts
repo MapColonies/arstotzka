@@ -1,5 +1,5 @@
 import config from 'config';
-import { getOtelMixin } from '@map-colonies/telemetry';
+import { getOtelMixin, TracingOptions } from '@map-colonies/telemetry';
 import jsLogger, { LoggerOptions } from '@map-colonies/js-logger';
 import { DataSource } from 'typeorm';
 import { trace } from '@opentelemetry/api';
@@ -8,7 +8,7 @@ import { HealthCheck } from '@godaddy/terminus';
 import { CleanupRegistry } from '@map-colonies/cleanup-registry';
 import { Mediator, MediatorConfig } from '@map-colonies/arstotzka-mediator';
 import { dataSourceFactory, DATA_SOURCE_PROVIDER, getDbHealthCheckFunction } from './common/db';
-import { tracing } from './common/tracing';
+import { tracingFactory } from './common/tracing';
 import { HEALTHCHECK, ON_SIGNAL, SERVICES, SERVICE_NAME } from './common/constants';
 import { actionRouterFactory, ACTION_ROUTER_SYMBOL } from './action/routes/actionRouter';
 import { InjectionObject, registerDependencies } from './common/dependencyRegistration';
@@ -32,7 +32,13 @@ export const registerExternalValues = async (options?: RegisterOptions): Promise
     cleanupRegistry.on('itemFailed', (id, error, msg) => logger.error({ msg, itemId: id, err: error }));
     cleanupRegistry.on('finished', (status) => logger.info({ msg: `cleanup registry finished cleanup`, status }));
 
+    const tracingConfig = config.get<Partial<TracingOptions>>('telemetry.tracing');
+
+    const tracing = tracingFactory({ ...tracingConfig });
+
     cleanupRegistry.register({ func: tracing.stop.bind(tracing), id: SERVICES.TRACER });
+
+    tracing.start();
 
     const tracer = trace.getTracer(SERVICE_NAME);
 
