@@ -1,4 +1,4 @@
-import { DataSource, EntityManager, FindManyOptions, FindOneOptions, FindOptions, FindOptionsWhere, In } from 'typeorm';
+import { DataSource, EntityManager, FindManyOptions, FindOptionsWhere, In } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { FactoryFunction } from 'tsyringe';
 import { Action, ActionFilter, ActionStatus, ParallelismMismatchError, UpdatableActionParams } from '@map-colonies/arstotzka-common';
@@ -51,7 +51,9 @@ const createActionRepository = (dataSource: DataSource) => {
         .values(params)
         .returning([ACTION_IDENTIFIER_COLUMN])
         .execute();
-      return insertResult.identifiers[0][ACTION_IDENTIFIER_COLUMN] as string;
+
+      const identifiers = insertResult.identifiers[0] as { [ACTION_IDENTIFIER_COLUMN]: string };
+      return identifiers[ACTION_IDENTIFIER_COLUMN];
     },
     async createActionOnlyIfInactive(params: CreateActionParams): Promise<string> {
       return this.manager.connection.transaction(async (transactionalEntityManager: EntityManager) => {
@@ -83,14 +85,15 @@ const createActionRepository = (dataSource: DataSource) => {
     },
     async updateLastAndCreate(updateParams: UpdatableActionParams, params: CreateActionParams): Promise<string> {
       return this.manager.connection.transaction(async (transactionalEntityManager: EntityManager) => {
-        const actions = await this.findActions(
+        const actions: ActionEntity[] = await this.findActions(
           { service: params.serviceId, status: [ActionStatus.ACTIVE], sort: 'desc', limit: 1 },
           transactionalEntityManager
         );
 
         if (actions.length !== 0) {
           const action = actions[0];
-          const updatedMetadata = { ...action.metadata, ...updateParams.metadata };
+          const existingMetadata = action.metadata !== null ? action.metadata : undefined;
+          const updatedMetadata = { ...existingMetadata, ...updateParams.metadata };
           await this.updateOneAction(action.actionId, { ...updateParams, metadata: updatedMetadata }, transactionalEntityManager);
         }
 

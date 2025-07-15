@@ -8,7 +8,7 @@ import { HealthCheck } from '@godaddy/terminus';
 import { CleanupRegistry } from '@map-colonies/cleanup-registry';
 import { Mediator, MediatorConfig } from '@map-colonies/arstotzka-mediator';
 import { dataSourceFactory, DATA_SOURCE_PROVIDER, getDbHealthCheckFunction } from './common/db';
-import { tracingFactory } from './common/tracing';
+import { getTracing, tracingFactory } from './common/tracing';
 import { HEALTHCHECK, ON_SIGNAL, SERVICES, SERVICE_NAME } from './common/constants';
 import { InjectionObject, registerDependencies } from './common/dependencyRegistration';
 import { serviceRouterFactory, SERVICE_ROUTER_SYMBOL } from './service/routes/serviceRouter';
@@ -35,13 +35,8 @@ export const registerExternalValues = async (options?: RegisterOptions): Promise
     cleanupRegistry.on('itemFailed', (id, error, msg) => logger.error({ msg, itemId: id, err: error }));
     cleanupRegistry.on('finished', (status) => logger.info({ msg: `cleanup registry finished cleanup`, status }));
 
-    const tracingConfig = config.get<Partial<TracingOptions>>('telemetry.tracing');
-
-    const tracing = tracingFactory({ ...tracingConfig });
-
+    const tracing = getTracing();
     cleanupRegistry.register({ func: tracing.stop.bind(tracing), id: SERVICES.TRACER });
-
-    tracing.start();
 
     const tracer = trace.getTracer(SERVICE_NAME);
 

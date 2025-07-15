@@ -32,4 +32,4 @@ COPY --chown=node:node --from=build /tmp/buildApp/config ./config
 
 USER node
 EXPOSE 8080
-CMD ["dumb-init", "node", "--max_old_space_size=512", "./index.js"]
+CMD ["dumb-init", "node", "--import", "./instrumentation.mjs", "./index.js"]
