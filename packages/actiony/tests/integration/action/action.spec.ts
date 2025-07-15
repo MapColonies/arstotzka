@@ -516,14 +516,14 @@ describe('action', function () {
         const response = await requestSender.getActions({ limit: -1 });
 
         expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
-        expect(response.body).toHaveProperty('message', 'request.query.limit should be >= 1');
+        expect(response.body).toHaveProperty('message', 'request/query/limit must be >= 1');
       });
 
       it('should return 400 for a filter with bad sort', async function () {
         const response = await requestSender.getActions({ sort: 'badSort' as Sort });
 
         expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
-        expect(response.body).toHaveProperty('message', 'request.query.sort should be equal to one of the allowed values: asc, desc');
+        expect(response.body).toHaveProperty('message', 'request/query/sort must be equal to one of the allowed values: asc, desc');
       });
 
       it('should return 400 for a filter with additional properties', async function () {
@@ -546,7 +546,7 @@ describe('action', function () {
         expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
         expect(response.body).toHaveProperty(
           'message',
-          'request.query.status[0] should be equal to one of the allowed values: active, completed, failed, canceled'
+          'request/query/status/0 must be equal to one of the allowed values: active, completed, failed, canceled'
         );
       });
     });
@@ -559,7 +559,7 @@ describe('action', function () {
         const response = await requestSender.postAction(restOfParams as ActionParams);
 
         expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
-        expect(response.body).toHaveProperty('message', "request.body should have required property 'serviceId'");
+        expect(response.body).toHaveProperty('message', "request/body must have required property 'serviceId'");
       });
 
       it('should return 400 if the request body is missing state', async function () {
@@ -569,7 +569,7 @@ describe('action', function () {
         const response = await requestSender.postAction(restOfParams as ActionParams);
 
         expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
-        expect(response.body).toHaveProperty('message', "request.body should have required property 'state'");
+        expect(response.body).toHaveProperty('message', "request/body must have required property 'state'");
       });
 
       it('should return 400 if the request body has additional properties', async function () {
@@ -578,7 +578,7 @@ describe('action', function () {
         const response = await requestSender.postAction({ ...params, additionalProperty: 'value' } as ActionParams);
 
         expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
-        expect(response.body).toHaveProperty('message', 'request.body should NOT have additional properties');
+        expect(response.body).toHaveProperty('message', 'request/body must NOT have additional properties');
       });
 
       it('should return 400 if the request body has an invalid metadata', async function () {
@@ -587,7 +587,7 @@ describe('action', function () {
         const response = await requestSender.postAction({ ...params, metadata: 1 as unknown as Record<string, unknown> } as ActionParams);
 
         expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
-        expect(response.body).toHaveProperty('message', 'request.body.metadata should be object');
+        expect(response.body).toHaveProperty('message', 'request/body/metadata must be object');
       });
 
       it('should return 404 if the requesting service is not recognized by the registry', async function () {
@@ -645,7 +645,7 @@ describe('action', function () {
         expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
         expect(response.body).toHaveProperty(
           'message',
-          'request.body.status should be equal to one of the allowed values: active, completed, failed, canceled'
+          'request/body/status must be equal to one of the allowed values: active, completed, failed, canceled'
         );
       });
 
@@ -662,7 +662,7 @@ describe('action', function () {
         const response = await requestSender.patchAction(actionId, { metadata: 1 as unknown as Record<string, unknown> });
 
         expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
-        expect(response.body).toHaveProperty('message', 'request.body.metadata should be object');
+        expect(response.body).toHaveProperty('message', 'request/body/metadata must be object');
       });
 
       it('should return 400 if the request body has additional properties', async function () {
@@ -682,7 +682,7 @@ describe('action', function () {
         } as UpdatableActionParams);
 
         expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
-        expect(response.body).toHaveProperty('message', 'request.body should NOT have additional properties');
+        expect(response.body).toHaveProperty('message', 'request/body must NOT have additional properties');
       });
 
       it('should return 400 if the request body is empty', async function () {
@@ -698,14 +698,14 @@ describe('action', function () {
         const response = await requestSender.patchAction(actionId, {});
 
         expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
-        expect(response.body).toHaveProperty('message', 'request.body should NOT have fewer than 1 properties');
+        expect(response.body).toHaveProperty('message', 'request/body must NOT have fewer than 1 properties');
       });
 
       it('should return 400 if the actionId param invalid', async function () {
         const response = await requestSender.patchAction('badActionId', { status: ActionStatus.CANCELED });
 
         expect(response.status).toBe(httpStatusCodes.BAD_REQUEST);
-        expect(response.body).toHaveProperty('message', 'request.params.actionId should match format "uuid"');
+        expect(response.body).toHaveProperty('message', 'request/params/actionId must match format "uuid"');
       });
 
       it('should return 404 if the patched action does not exist', async function () {
