@@ -1,5 +1,5 @@
 import config from 'config';
-import { getOtelMixin, TracingOptions } from '@map-colonies/telemetry';
+import { getOtelMixin } from '@map-colonies/telemetry';
 import jsLogger, { LoggerOptions } from '@map-colonies/js-logger';
 import { DataSource } from 'typeorm';
 import { trace } from '@opentelemetry/api';
@@ -8,7 +8,7 @@ import { HealthCheck } from '@godaddy/terminus';
 import { CleanupRegistry } from '@map-colonies/cleanup-registry';
 import { Mediator, MediatorConfig } from '@map-colonies/arstotzka-mediator';
 import { dataSourceFactory, DATA_SOURCE_PROVIDER, getDbHealthCheckFunction } from './common/db';
-import { getTracing, tracingFactory } from './common/tracing';
+import { getTracing } from './common/tracing';
 import { HEALTHCHECK, ON_SIGNAL, SERVICES, SERVICE_NAME } from './common/constants';
 import { InjectionObject, registerDependencies } from './common/dependencyRegistration';
 import { serviceRouterFactory, SERVICE_ROUTER_SYMBOL } from './service/routes/serviceRouter';
