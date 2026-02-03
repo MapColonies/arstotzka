@@ -6,6 +6,8 @@ import { DATA_SOURCE_PROVIDER } from '../../../common/db';
 import { CreateActionParams } from '../../models/action';
 import { Action as ActionEntity, ACTION_IDENTIFIER_COLUMN } from './action';
 
+const SERVICE_TARGET = 'registry.service';
+
 const filterToOptions = (filter: ActionFilter): FindOptionsWhere<ActionEntity> => {
   const options: FindOptionsWhere<ActionEntity> = {};
   if (filter.service !== undefined) {
@@ -55,13 +57,30 @@ const createActionRepository = (dataSource: DataSource) => {
       const identifiers = insertResult.identifiers[0] as { [ACTION_IDENTIFIER_COLUMN]: string };
       return identifiers[ACTION_IDENTIFIER_COLUMN];
     },
+    /**
+     * Acquires a pessimistic write lock on a service record.
+     * * @description
+     * This function executes a raw SQL `SELECT ... FOR UPDATE` to implement a database-level
+     * mutex on a specific service ID.
+     * Other transactions attempting to lock the same serviceId will be blocked
+     * until the current transaction completes (commit/rollback).
+     * * @param {string} serviceId - The unique identifier of the service to lock.
+     * @param {EntityManager} [transactionalEntityManager] - The TypeORM manager
+     * @returns {Promise<void>}
+     */
+    async lockService(serviceId: string, transactionManager?: EntityManager): Promise<void> {
+      const scopedManager: EntityManager = transactionManager ?? this.manager;
+      await scopedManager.query(`SELECT id FROM ${SERVICE_TARGET} WHERE id = $1 FOR UPDATE`, [serviceId]);
+    },
     async createActionOnlyIfInactive(params: CreateActionParams): Promise<string> {
       return this.manager.connection.transaction(async (transactionalEntityManager: EntityManager) => {
+        await this.lockService(params.serviceId, transactionalEntityManager);
+
         const existingAction = await this.findActions(
           { service: params.serviceId, status: [ActionStatus.ACTIVE], sort: 'desc', limit: 1 },
-          transactionalEntityManager,
-          { mode: 'pessimistic_write' }
+          transactionalEntityManager
         );
+
         if (existingAction.length !== 0) {
           throw new ParallelismMismatchError(`could not create an action for service ${params.serviceId} due to parallelism mismatch`);
         }
@@ -85,6 +104,8 @@ const createActionRepository = (dataSource: DataSource) => {
     },
     async updateLastAndCreate(updateParams: UpdatableActionParams, params: CreateActionParams): Promise<string> {
       return this.manager.connection.transaction(async (transactionalEntityManager: EntityManager) => {
+        await this.lockService(params.serviceId, transactionalEntityManager);
+
         const actions: ActionEntity[] = await this.findActions(
           { service: params.serviceId, status: [ActionStatus.ACTIVE], sort: 'desc', limit: 1 },
           transactionalEntityManager
