@@ -502,8 +502,19 @@ describe('action', function () {
         expect(action).toHaveProperty('status', ActionStatus.COMPLETED);
         expect(action).toHaveProperty('closedAt', action.updatedAt);
 
-        // validate another patch will fail
-        const conflictingPatchRes = await requestSender.patchAction(actionId, { status: ActionStatus.COMPLETED });
+        // validate another patch with the same status will be completed
+        getResponse = await requestSender.patchAction(actionId, { status: ActionStatus.COMPLETED });
+
+        // validate the action status is completed and closedAt equals to updatedAt
+        getResponse = await requestSender.getActions({ service: params.serviceId, status: [ActionStatus.COMPLETED] });
+        expect(getResponse.status).toBe(httpStatusCodes.OK);
+        expect(getResponse.body).toHaveLength(1);
+        action = (getResponse.body as Action[])[0];
+        expect(action).toHaveProperty('status', ActionStatus.COMPLETED);
+        expect(action).toHaveProperty('closedAt', action.updatedAt);
+
+        // validate another patch with different status will fail
+        const conflictingPatchRes = await requestSender.patchAction(actionId, { status: ActionStatus.CANCELED });
         expect(conflictingPatchRes.status).toBe(httpStatusCodes.CONFLICT);
         expect(conflictingPatchRes.body).toHaveProperty('message', `action ${actionId} has already been closed with status completed`);
       });
@@ -716,8 +727,7 @@ describe('action', function () {
         expect(response.body).toHaveProperty('message', `action ${uuid} not found`);
       });
 
-      it('should return 409 if the patched action has already been closed', async function () {
-        const closingStatus = ActionStatus.COMPLETED;
+      it('should return 409 if the patched action has already been closed with different status', async function () {
         const params = generateActionParams();
         const service = generateGetServiceResponse({ serviceId: params.serviceId });
         fetchServiceMock.mockResolvedValue(service);
@@ -731,13 +741,17 @@ describe('action', function () {
         expect(action).toHaveProperty('status', ActionStatus.ACTIVE);
 
         // first patch should succeed
-        response = await requestSender.patchAction(actionId, { status: closingStatus });
+        response = await requestSender.patchAction(actionId, { status: ActionStatus.COMPLETED });
         expect(response.status).toBe(httpStatusCodes.OK);
 
-        // second patch should conflict
+        // second patch with the same closing status should succeed
         response = await requestSender.patchAction(actionId, { status: ActionStatus.COMPLETED });
+        expect(response.status).toBe(httpStatusCodes.OK);
+
+        // third patch with different status should conflict
+        response = await requestSender.patchAction(actionId, { status: ActionStatus.FAILED });
         expect(response.status).toBe(httpStatusCodes.CONFLICT);
-        expect(response.body).toHaveProperty('message', `action ${actionId} has already been closed with status ${closingStatus}`);
+        expect(response.body).toHaveProperty('message', `action ${actionId} has already been closed with status ${ActionStatus.COMPLETED}`);
       });
     });
   });
