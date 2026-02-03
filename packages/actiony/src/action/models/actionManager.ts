@@ -52,7 +52,9 @@ export class ActionManager {
       parentRotation: service.parentRotation,
     };
 
-    if (service.parallelism === Parallelism.SINGLE || service.parallelism === Parallelism.MULTIPLE) {
+    if (service.parallelism === Parallelism.SINGLE) {
+      actionId = await this.actionRepository.createActionOnlyIfInactive(actionParams);
+    } else if (service.parallelism === Parallelism.MULTIPLE) {
       actionId = await this.actionRepository.createAction(actionParams);
     } else {
       actionId = await this.actionRepository.updateLastAndCreate(
@@ -74,8 +76,8 @@ export class ActionManager {
       throw new ActionNotFoundError(`action ${actionId} not found`);
     }
 
-    if (ACTION_CLOSED_STATUSES.includes(action.status)) {
-      this.logger.error({ msg: 'action has already been closed', actionId, actionStatus: action.status });
+    if (ACTION_CLOSED_STATUSES.includes(action.status) && action.status !== updateParams.status) {
+      this.logger.error({ msg: 'action has already been closed with different status', action });
       throw new ActionAlreadyClosedError(`action ${actionId} has already been closed with status ${action.status}`);
     }
 

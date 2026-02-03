@@ -53,7 +53,7 @@ describe('lock', function () {
   });
 
   afterAll(async function () {
-    await lockRepository.delete({});
+    await lockRepository.createQueryBuilder().delete().execute();
   });
 
   describe('Happy Path', function () {
